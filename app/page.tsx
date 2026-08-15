@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import EditorCommentary from "@/components/EditorCommentary";
+import FranviaEditorial from "@/components/FranviaEditorial";
 
 interface BoxOfficeRow {
   rank: number;
@@ -73,6 +74,7 @@ export default async function Home() {
             No box office data available yet. Please check back soon.
           </p>
         </article>
+        <FranviaEditorial />
       </main>
     );
   }
@@ -128,6 +130,7 @@ export default async function Home() {
           System), operated by the Korean Film Council (KOFIC).
         </p>
       </article>
+      <FranviaEditorial />
     </main>
   );
 }
