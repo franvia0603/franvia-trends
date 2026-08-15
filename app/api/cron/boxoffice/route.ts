@@ -27,6 +27,12 @@ interface KobisResponse {
 interface TmdbSearchResult {
   title?: string;
   release_date?: string;
+  poster_path?: string | null;
+}
+
+interface TmdbMatch {
+  enTitle: string | null;
+  posterUrl: string | null;
 }
 
 interface TmdbSearchResponse {
@@ -69,11 +75,15 @@ function pickClosestByReleaseDate(
   return closest ?? results[0];
 }
 
-async function fetchEnTitle(
+const TMDB_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w342";
+
+async function fetchTmdbMatch(
   movieName: string,
   openDt: string | null,
   tmdbApiKey: string,
-): Promise<string | null> {
+): Promise<TmdbMatch> {
+  const empty: TmdbMatch = { enTitle: null, posterUrl: null };
+
   try {
     const url = new URL("https://api.themoviedb.org/3/search/movie");
     url.searchParams.set("api_key", tmdbApiKey);
@@ -83,25 +93,27 @@ async function fetchEnTitle(
 
     const res = await fetch(url.toString());
     if (!res.ok) {
-      return null;
+      return empty;
     }
 
     const data = (await res.json()) as TmdbSearchResponse;
     const results = data.results ?? [];
     if (results.length === 0) {
-      return null;
+      return empty;
     }
 
-    const title = pickClosestByReleaseDate(results, openDt)?.title;
+    const match = pickClosestByReleaseDate(results, openDt);
+    const posterUrl = match?.poster_path
+      ? `${TMDB_POSTER_BASE_URL}${match.poster_path}`
+      : null;
 
     // 영문 번역이 없으면 TMDB가 원제(한글)를 그대로 반환하므로, 그 경우 null 처리한다.
-    if (!title || containsHangul(title)) {
-      return null;
-    }
+    const title = match?.title;
+    const enTitle = title && !containsHangul(title) ? title : null;
 
-    return title;
+    return { enTitle, posterUrl };
   } catch {
-    return null;
+    return empty;
   }
 }
 
@@ -172,15 +184,16 @@ export async function GET(request: NextRequest) {
 
   const rows = [];
   for (const item of list) {
-    const enTitle = tmdbApiKey
-      ? await fetchEnTitle(item.movieNm, item.openDt || null, tmdbApiKey)
-      : null;
+    const { enTitle, posterUrl } = tmdbApiKey
+      ? await fetchTmdbMatch(item.movieNm, item.openDt || null, tmdbApiKey)
+      : { enTitle: null, posterUrl: null };
 
     rows.push({
       rank: Number(item.rank),
       rank_change: Number(item.rankInten),
       movie_name: item.movieNm,
       en_title: enTitle,
+      poster_url: posterUrl,
       audience_count: Number(item.audiCnt),
       audience_acc: Number(item.audiAcc),
       sales_amt: Number(item.salesAmt),

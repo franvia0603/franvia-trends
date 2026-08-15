@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import EditorCommentary from "@/components/EditorCommentary";
 import FranviaEditorial from "@/components/FranviaEditorial";
@@ -7,6 +8,7 @@ interface BoxOfficeRow {
   rank_change: number;
   movie_name: string;
   en_title: string | null;
+  poster_url: string | null;
   audience_count: number;
   audience_acc: number;
   rank_date: string;
@@ -29,7 +31,7 @@ async function getLatestBoxOffice(): Promise<BoxOfficeRow[]> {
   const { data, error } = await supabase
     .from("boxoffice")
     .select(
-      "rank, rank_change, movie_name, en_title, audience_count, audience_acc, rank_date",
+      "rank, rank_change, movie_name, en_title, poster_url, audience_count, audience_acc, rank_date",
     )
     .eq("rank_date", latest.rank_date)
     .order("rank", { ascending: true });
@@ -57,6 +59,42 @@ function RankChangeBadge({ change }: { change: number }) {
     );
   }
   return <span className="text-sm font-semibold text-zinc-400">–</span>;
+}
+
+function PosterThumbnail({
+  posterUrl,
+  alt,
+}: {
+  posterUrl: string | null;
+  alt: string;
+}) {
+  if (posterUrl) {
+    return (
+      <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+        <Image
+          src={posterUrl}
+          alt={alt}
+          fill
+          sizes="64px"
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-24 w-16 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-300">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        className="h-7 w-7"
+        aria-hidden="true"
+      >
+        <path d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4Zm0 2h2v2H4V6Zm4 0h2v2H8V6Zm4 0h2v2h-2V6Zm4 0h2v2h-2V6ZM4 10h16v8H4v-8Z" />
+      </svg>
+    </div>
+  );
 }
 
 export default async function Home() {
@@ -104,6 +142,10 @@ export default async function Home() {
               key={`${movie.movie_name}-${movie.rank_date}`}
               className="flex items-center gap-4 px-5 py-4"
             >
+              <PosterThumbnail
+                posterUrl={movie.poster_url}
+                alt={movie.en_title || movie.movie_name}
+              />
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-base font-bold text-white">
                 {movie.rank}
               </span>
