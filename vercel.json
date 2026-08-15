@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/boxoffice",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
