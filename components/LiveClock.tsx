@@ -36,10 +36,9 @@ export default function LiveClock() {
   const [parts, setParts] = useState<KstParts | null>(null);
 
   useEffect(() => {
-    setParts(getKstParts());
-    const interval = setInterval(() => {
-      setParts(getKstParts());
-    }, 1000);
+    const tick = () => setParts(getKstParts());
+    tick();
+    const interval = setInterval(tick, 1000);
 
     return () => clearInterval(interval);
   }, []);
