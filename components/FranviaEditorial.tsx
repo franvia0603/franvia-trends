@@ -1,8 +1,11 @@
+import Image from "next/image";
+
 interface FranviaPost {
   title: string;
   url: string;
   publishedAt: string;
   summary: string | null;
+  thumbnailUrl: string | null;
 }
 
 function decodeEntities(text: string): string {
@@ -33,6 +36,21 @@ function extractSummary(contentHtml: string, maxLength = 160): string | null {
   return `${truncated.slice(0, lastSpace > 0 ? lastSpace : maxLength)}…`;
 }
 
+// Blogger 이미지 URL 끝에 붙는 =s72-c 같은 축소 사이즈 파라미터를 더 큰 사이즈로 교체한다.
+function upsizeBloggerImage(url: string, size = 600): string {
+  const match = url.match(/=s(\d+)(-c)?$/i);
+  if (match && Number(match[1]) < size) {
+    return url.replace(/=s\d+(-c)?$/i, `=s${size}`);
+  }
+  return url;
+}
+
+function extractThumbnailUrl(contentHtml: string): string | null {
+  const match = contentHtml.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (!match) return null;
+  return upsizeBloggerImage(match[1]);
+}
+
 // Blogger의 기본 Atom 피드를 가벼운 정규식 파서로 처리한다 (별도 XML 파서 의존성 없이).
 function parseFeed(xml: string, limit: number): FranviaPost[] {
   const entries = xml.match(/<entry>[\s\S]*?<\/entry>/g) ?? [];
@@ -50,13 +68,16 @@ function parseFeed(xml: string, limit: number): FranviaPost[] {
       continue;
     }
 
+    const decodedContent = contentMatch
+      ? decodeEntities(contentMatch[1])
+      : null;
+
     posts.push({
       title: decodeEntities(titleMatch[1].trim()),
       publishedAt: publishedMatch[1].trim(),
       url: linkMatch[3],
-      summary: contentMatch
-        ? extractSummary(decodeEntities(contentMatch[1]))
-        : null,
+      summary: decodedContent ? extractSummary(decodedContent) : null,
+      thumbnailUrl: decodedContent ? extractThumbnailUrl(decodedContent) : null,
     });
   }
 
@@ -100,23 +121,36 @@ export default async function FranviaEditorial() {
               href={post.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block h-full rounded-2xl border border-zinc-200 bg-white px-5 py-4 transition-colors hover:border-zinc-300"
+              className="block h-full overflow-hidden rounded-2xl border border-zinc-200 bg-white transition-colors hover:border-zinc-300"
             >
-              <p className="text-xs text-zinc-400">
-                {new Date(post.publishedAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </p>
-              <p className="mt-1 text-base font-semibold text-zinc-900">
-                {post.title}
-              </p>
-              {post.summary && (
-                <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
-                  {post.summary}
+              <div className="relative aspect-video w-full bg-zinc-100">
+                {post.thumbnailUrl && (
+                  <Image
+                    src={post.thumbnailUrl}
+                    alt={post.title}
+                    fill
+                    sizes="(min-width: 640px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                )}
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-xs text-zinc-400">
+                  {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </p>
-              )}
+                <p className="mt-1 text-base font-semibold text-zinc-900">
+                  {post.title}
+                </p>
+                {post.summary && (
+                  <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
+                    {post.summary}
+                  </p>
+                )}
+              </div>
             </a>
           </li>
         ))}
