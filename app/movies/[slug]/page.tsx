@@ -14,6 +14,9 @@ interface BoxOfficeDetail {
   movie_name: string;
   en_title: string | null;
   poster_url: string | null;
+  overview: string | null;
+  vote_average: number | null;
+  vote_count: number | null;
   audience_count: number;
   audience_acc: number;
   open_dt: string | null;
@@ -33,7 +36,7 @@ async function getMovie(slug: string): Promise<BoxOfficeDetail | null> {
   const { data, error } = await supabase
     .from("boxoffice")
     .select(
-      "rank, rank_change, movie_name, en_title, poster_url, audience_count, audience_acc, open_dt, rank_date, slug",
+      "rank, rank_change, movie_name, en_title, poster_url, overview, vote_average, vote_count, audience_count, audience_acc, open_dt, rank_date, slug",
     )
     .eq("slug", slug)
     .order("rank_date", { ascending: false })
@@ -82,6 +85,25 @@ function RankChangeBadge({ change }: { change: number }) {
   return <span className="text-sm font-semibold text-zinc-400">–</span>;
 }
 
+// 개봉일 당일을 Day 1로 세는 방식(시간대 영향을 없애기 위해 UTC 자정 기준으로 비교)
+function getDaysSinceRelease(openDt: string): number {
+  const release = new Date(openDt);
+  const releaseUTC = Date.UTC(
+    release.getUTCFullYear(),
+    release.getUTCMonth(),
+    release.getUTCDate(),
+  );
+
+  const now = new Date();
+  const todayUTC = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+  );
+
+  return Math.floor((todayUTC - releaseUTC) / (1000 * 60 * 60 * 24)) + 1;
+}
+
 export async function generateMetadata({
   params,
 }: MoviePageProps): Promise<Metadata> {
@@ -122,6 +144,24 @@ export default async function MoviePage({ params }: MoviePageProps) {
       })
     : null;
 
+  const hasRating = movie.vote_average !== null && movie.vote_average > 0;
+
+  const daysSinceRelease = movie.open_dt
+    ? getDaysSinceRelease(movie.open_dt)
+    : null;
+
+  const formattedAudienceAcc = movie.audience_acc.toLocaleString("en-US");
+  const releaseSentenceDate = movie.open_dt
+    ? new Date(movie.open_dt).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+
+  const performanceSentence = releaseSentenceDate
+    ? `As of today, ${title} has drawn ${formattedAudienceAcc} admissions since its ${releaseSentenceDate} release.`
+    : `As of today, ${title} has drawn ${formattedAudienceAcc} admissions.`;
+
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-16">
       <Link
@@ -154,6 +194,15 @@ export default async function MoviePage({ params }: MoviePageProps) {
             <p className="mt-1 text-base text-zinc-500">{movie.movie_name}</p>
           )}
 
+          {hasRating ? (
+            <p className="mt-2 text-sm font-medium text-zinc-600">
+              TMDB Global Rating: {movie.vote_average!.toFixed(1)}/10 (
+              {movie.vote_count?.toLocaleString("en-US")} votes)
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-zinc-400">No TMDB ratings yet</p>
+          )}
+
           <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
             {formattedOpenDt && (
               <div>
@@ -184,6 +233,31 @@ export default async function MoviePage({ params }: MoviePageProps) {
           </dl>
         </div>
       </div>
+
+      {movie.overview && (
+        <section className="mt-10">
+          <h2 className="text-lg font-bold text-zinc-900">Overview</h2>
+          <p className="mt-3 text-sm leading-relaxed text-zinc-700">
+            {movie.overview}
+          </p>
+        </section>
+      )}
+
+      <section className="mt-10">
+        <h2 className="text-lg font-bold text-zinc-900">
+          Korean Box Office Performance
+        </h2>
+        <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-5">
+          {daysSinceRelease !== null && (
+            <span className="inline-block rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+              Day {daysSinceRelease} since release
+            </span>
+          )}
+          <p className="mt-3 text-sm leading-relaxed text-zinc-700">
+            {performanceSentence}
+          </p>
+        </div>
+      </section>
 
       <section className="mt-12">
         <h2 className="text-lg font-bold text-zinc-900">
