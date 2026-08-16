@@ -114,6 +114,21 @@ export default async function FranviaEditorial() {
         More from Franvia
       </h2>
 
+      <a
+        href="https://www.franvia.com/p/franvia-hello.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 block rounded-xl bg-zinc-100 p-6 transition-all duration-300 hover:cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.35)] hover:ring-1 hover:ring-red-500/50"
+      >
+        <p className="text-xl font-bold text-zinc-900">
+          FRANVIA | BEYOND K-VIBE
+        </p>
+        <p className="mt-1.5 text-sm text-zinc-500">
+          From K-Media and Food to practical Korean used in daily life and
+          K-Dramas.
+        </p>
+      </a>
+
       <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {posts.map((post) => (
           <li key={post.url}>
