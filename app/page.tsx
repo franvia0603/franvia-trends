@@ -4,6 +4,8 @@ import SiteHeader from "@/components/SiteHeader";
 import EditorCommentary from "@/components/EditorCommentary";
 import FranviaEditorial from "@/components/FranviaEditorial";
 
+export const revalidate = 3600;
+
 interface BoxOfficeRow {
   rank: number;
   rank_change: number;

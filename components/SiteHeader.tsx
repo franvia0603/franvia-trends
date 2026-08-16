@@ -47,7 +47,7 @@ export default function SiteHeader() {
             Movies
           </a>
           <span className="flex cursor-default items-center gap-1.5 pb-1 text-sm font-medium text-zinc-500">
-            Dramas
+            K-Drama
             <ComingSoonBadge />
           </span>
           <span className="flex cursor-default items-center gap-1.5 pb-1 text-sm font-medium text-zinc-500">
@@ -95,7 +95,7 @@ export default function SiteHeader() {
               Movies
             </a>
             <span className="flex items-center gap-1.5 text-sm font-medium text-zinc-500">
-              Dramas
+              K-Drama
               <ComingSoonBadge />
             </span>
             <span className="flex items-center gap-1.5 text-sm font-medium text-zinc-500">
