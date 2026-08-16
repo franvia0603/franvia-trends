@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SearchBar from "@/components/SearchBar";
 
 const SECTION_IDS = ["movies", "k-drama"] as const;
 type SectionId = (typeof SECTION_IDS)[number];
@@ -107,6 +108,8 @@ export default function SiteHeader() {
           </span>
         </nav>
 
+        <SearchBar compact className="hidden md:block md:w-44 lg:w-56" />
+
         <VisitFranviaButton className="hidden md:inline-block" />
 
         <button
@@ -156,6 +159,7 @@ export default function SiteHeader() {
               K-pop
               <ComingSoonBadge />
             </span>
+            <SearchBar compact />
             <VisitFranviaButton className="text-center" />
           </nav>
         </div>
