@@ -1,11 +1,10 @@
+import Link from "next/link";
+
 const footerLinks = [
-  { label: "About Us", href: "https://www.franvia.com/p/about-us.html" },
-  { label: "Contact Us", href: "https://www.franvia.com/p/contact-us.html" },
-  {
-    label: "Privacy Policy",
-    href: "https://www.franvia.com/p/privacy-policy.html",
-  },
-  { label: "Terms of Use", href: "https://www.franvia.com/p/terms-of-use.html" },
+  { label: "About Us", href: "/about" },
+  { label: "Contact Us", href: "/contact" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Use", href: "/terms" },
 ];
 
 export default function SiteFooter() {
@@ -35,14 +34,12 @@ export default function SiteFooter() {
           {footerLinks.map((link, index) => (
             <span key={link.href} className="flex items-center gap-2">
               {index > 0 && <span aria-hidden="true">·</span>}
-              <a
+              <Link
                 href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="transition-colors hover:text-amber-400"
               >
                 {link.label}
-              </a>
+              </Link>
             </span>
           ))}
         </nav>
