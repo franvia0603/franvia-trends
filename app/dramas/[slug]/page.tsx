@@ -17,6 +17,9 @@ interface DramaDetail {
   overview: string | null;
   vote_average: number | null;
   vote_count: number | null;
+  genres: string[] | null;
+  trailer_key: string | null;
+  cast_names: string[] | null;
   first_air_date: string | null;
   rank_date: string;
   slug: string;
@@ -34,7 +37,7 @@ async function getDrama(slug: string): Promise<DramaDetail | null> {
   const { data, error } = await supabase
     .from("dramas")
     .select(
-      "rank, rank_change, title, en_title, poster_url, overview, vote_average, vote_count, first_air_date, rank_date, slug",
+      "rank, rank_change, title, en_title, poster_url, overview, vote_average, vote_count, genres, trailer_key, cast_names, first_air_date, rank_date, slug",
     )
     .eq("slug", slug)
     .order("rank_date", { ascending: false })
@@ -157,6 +160,19 @@ export default async function DramaPage({ params }: DramaPageProps) {
             <p className="mt-1 text-base text-zinc-500">{drama.title}</p>
           )}
 
+          {drama.genres && drama.genres.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {drama.genres.map((genre) => (
+                <span
+                  key={genre}
+                  className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+          )}
+
           {hasRating ? (
             <p className="mt-2 text-sm font-medium text-zinc-600">
               TMDB Global Rating: {drama.vote_average!.toFixed(1)}/10 (
@@ -191,11 +207,35 @@ export default async function DramaPage({ params }: DramaPageProps) {
         </div>
       </div>
 
+      {drama.trailer_key && (
+        <section className="mt-10">
+          <h2 className="text-lg font-bold text-zinc-900">Trailer</h2>
+          <div className="relative mt-4 aspect-video w-full overflow-hidden rounded-xl bg-zinc-100">
+            <iframe
+              src={`https://www.youtube.com/embed/${drama.trailer_key}`}
+              title={`${title} trailer`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="absolute inset-0 h-full w-full"
+            />
+          </div>
+        </section>
+      )}
+
       {drama.overview && (
         <section className="mt-10">
           <h2 className="text-lg font-bold text-zinc-900">Overview</h2>
           <p className="mt-3 text-sm leading-relaxed text-zinc-700">
             {drama.overview}
+          </p>
+        </section>
+      )}
+
+      {drama.cast_names && drama.cast_names.length > 0 && (
+        <section className="mt-10">
+          <h3 className="text-sm font-semibold text-zinc-900">Cast</h3>
+          <p className="mt-1 text-sm text-zinc-700">
+            {drama.cast_names.join(", ")}
           </p>
         </section>
       )}

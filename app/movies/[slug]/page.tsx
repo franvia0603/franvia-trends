@@ -17,6 +17,10 @@ interface BoxOfficeDetail {
   overview: string | null;
   vote_average: number | null;
   vote_count: number | null;
+  genres: string[] | null;
+  trailer_key: string | null;
+  cast_names: string[] | null;
+  director: string | null;
   audience_count: number;
   audience_acc: number;
   open_dt: string | null;
@@ -36,7 +40,7 @@ async function getMovie(slug: string): Promise<BoxOfficeDetail | null> {
   const { data, error } = await supabase
     .from("boxoffice")
     .select(
-      "rank, rank_change, movie_name, en_title, poster_url, overview, vote_average, vote_count, audience_count, audience_acc, open_dt, rank_date, slug",
+      "rank, rank_change, movie_name, en_title, poster_url, overview, vote_average, vote_count, genres, trailer_key, cast_names, director, audience_count, audience_acc, open_dt, rank_date, slug",
     )
     .eq("slug", slug)
     .order("rank_date", { ascending: false })
@@ -194,6 +198,19 @@ export default async function MoviePage({ params }: MoviePageProps) {
             <p className="mt-1 text-base text-zinc-500">{movie.movie_name}</p>
           )}
 
+          {movie.genres && movie.genres.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {movie.genres.map((genre) => (
+                <span
+                  key={genre}
+                  className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+          )}
+
           {hasRating ? (
             <p className="mt-2 text-sm font-medium text-zinc-600">
               TMDB Global Rating: {movie.vote_average!.toFixed(1)}/10 (
@@ -234,12 +251,46 @@ export default async function MoviePage({ params }: MoviePageProps) {
         </div>
       </div>
 
+      {movie.trailer_key && (
+        <section className="mt-10">
+          <h2 className="text-lg font-bold text-zinc-900">Trailer</h2>
+          <div className="relative mt-4 aspect-video w-full overflow-hidden rounded-xl bg-zinc-100">
+            <iframe
+              src={`https://www.youtube.com/embed/${movie.trailer_key}`}
+              title={`${title} trailer`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="absolute inset-0 h-full w-full"
+            />
+          </div>
+        </section>
+      )}
+
       {movie.overview && (
         <section className="mt-10">
           <h2 className="text-lg font-bold text-zinc-900">Overview</h2>
           <p className="mt-3 text-sm leading-relaxed text-zinc-700">
             {movie.overview}
           </p>
+        </section>
+      )}
+
+      {(movie.director || (movie.cast_names && movie.cast_names.length > 0)) && (
+        <section className="mt-10">
+          {movie.director && (
+            <p className="text-sm text-zinc-700">
+              <span className="font-semibold text-zinc-900">Director:</span>{" "}
+              {movie.director}
+            </p>
+          )}
+          {movie.cast_names && movie.cast_names.length > 0 && (
+            <div className={movie.director ? "mt-3" : ""}>
+              <h3 className="text-sm font-semibold text-zinc-900">Cast</h3>
+              <p className="mt-1 text-sm text-zinc-700">
+                {movie.cast_names.join(", ")}
+              </p>
+            </div>
+          )}
         </section>
       )}
 
