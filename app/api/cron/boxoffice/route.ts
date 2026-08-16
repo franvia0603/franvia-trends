@@ -4,6 +4,33 @@ import { generateSlug } from "@/lib/slug";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Vercel Hobby 플랜에서 설정 가능한 최대값. 항목당 검색+videos+credits
+// 3회 호출이 순차로 도는 만큼 기본 10초 제한을 넘길 수 있어 늘려둔다.
+export const maxDuration = 60;
+
+// TMDB 장르 목록은 자주 바뀌지 않으므로, API 호출 없이 하드코딩된 매핑을 사용한다.
+// 출처: https://api.themoviedb.org/3/genre/movie/list?language=en-US
+const MOVIE_GENRE_MAP: Record<number, string> = {
+  28: "Action",
+  12: "Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  14: "Fantasy",
+  36: "History",
+  27: "Horror",
+  10402: "Music",
+  9648: "Mystery",
+  10749: "Romance",
+  878: "Science Fiction",
+  10770: "TV Movie",
+  53: "Thriller",
+  10752: "War",
+  37: "Western",
+};
 
 interface KobisDailyBoxOfficeItem {
   rank: string;
@@ -26,12 +53,43 @@ interface KobisResponse {
 }
 
 interface TmdbSearchResult {
+  id: number;
   title?: string;
   release_date?: string;
   poster_path?: string | null;
   overview?: string;
   vote_average?: number;
   vote_count?: number;
+  genre_ids?: number[];
+}
+
+interface TmdbSearchResponse {
+  results?: TmdbSearchResult[];
+}
+
+interface TmdbVideo {
+  key: string;
+  site: string;
+  type: string;
+}
+
+interface TmdbVideosResponse {
+  results?: TmdbVideo[];
+}
+
+interface TmdbCastMember {
+  name: string;
+  order: number;
+}
+
+interface TmdbCrewMember {
+  name: string;
+  job: string;
+}
+
+interface TmdbCreditsResponse {
+  cast?: TmdbCastMember[];
+  crew?: TmdbCrewMember[];
 }
 
 interface TmdbMatch {
@@ -40,10 +98,10 @@ interface TmdbMatch {
   overview: string | null;
   voteAverage: number | null;
   voteCount: number | null;
-}
-
-interface TmdbSearchResponse {
-  results?: TmdbSearchResult[];
+  genres: string[];
+  trailerKey: string | null;
+  castNames: string[];
+  director: string | null;
 }
 
 function sleep(ms: number) {
@@ -84,6 +142,59 @@ function pickClosestByReleaseDate(
 
 const TMDB_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w342";
 
+async function fetchTrailerKey(
+  movieId: number,
+  tmdbApiKey: string,
+): Promise<string | null> {
+  try {
+    const url = new URL(
+      `https://api.themoviedb.org/3/movie/${movieId}/videos`,
+    );
+    url.searchParams.set("api_key", tmdbApiKey);
+    url.searchParams.set("language", "en-US");
+
+    const res = await fetch(url.toString());
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as TmdbVideosResponse;
+    const trailer = (data.results ?? []).find(
+      (video) => video.type === "Trailer" && video.site === "YouTube",
+    );
+
+    return trailer?.key ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchCredits(
+  movieId: number,
+  tmdbApiKey: string,
+): Promise<{ castNames: string[]; director: string | null }> {
+  try {
+    const url = new URL(
+      `https://api.themoviedb.org/3/movie/${movieId}/credits`,
+    );
+    url.searchParams.set("api_key", tmdbApiKey);
+    url.searchParams.set("language", "en-US");
+
+    const res = await fetch(url.toString());
+    if (!res.ok) return { castNames: [], director: null };
+
+    const data = (await res.json()) as TmdbCreditsResponse;
+    const castNames = (data.cast ?? [])
+      .slice(0, 5)
+      .map((member) => member.name);
+    const director =
+      (data.crew ?? []).find((member) => member.job === "Director")?.name ??
+      null;
+
+    return { castNames, director };
+  } catch {
+    return { castNames: [], director: null };
+  }
+}
+
 async function fetchTmdbMatch(
   movieName: string,
   openDt: string | null,
@@ -95,6 +206,10 @@ async function fetchTmdbMatch(
     overview: null,
     voteAverage: null,
     voteCount: null,
+    genres: [],
+    trailerKey: null,
+    castNames: [],
+    director: null,
   };
 
   try {
@@ -116,20 +231,37 @@ async function fetchTmdbMatch(
     }
 
     const match = pickClosestByReleaseDate(results, openDt);
-    const posterUrl = match?.poster_path
+    if (!match) {
+      return empty;
+    }
+
+    const posterUrl = match.poster_path
       ? `${TMDB_POSTER_BASE_URL}${match.poster_path}`
       : null;
 
     // 영문 번역이 없으면 TMDB가 원제(한글)를 그대로 반환하므로, 그 경우 null 처리한다.
-    const title = match?.title;
+    const title = match.title;
     const enTitle = title && !containsHangul(title) ? title : null;
+
+    const genres = (match.genre_ids ?? [])
+      .map((id) => MOVIE_GENRE_MAP[id])
+      .filter((name): name is string => Boolean(name));
+
+    const [trailerKey, credits] = await Promise.all([
+      fetchTrailerKey(match.id, tmdbApiKey),
+      fetchCredits(match.id, tmdbApiKey),
+    ]);
 
     return {
       enTitle,
       posterUrl,
-      overview: match?.overview || null,
-      voteAverage: match?.vote_average ?? null,
-      voteCount: match?.vote_count ?? null,
+      overview: match.overview || null,
+      voteAverage: match.vote_average ?? null,
+      voteCount: match.vote_count ?? null,
+      genres,
+      trailerKey,
+      castNames: credits.castNames,
+      director: credits.director,
     };
   } catch {
     return empty;
@@ -203,16 +335,29 @@ export async function GET(request: NextRequest) {
 
   const rows = [];
   for (const item of list) {
-    const { enTitle, posterUrl, overview, voteAverage, voteCount } =
-      tmdbApiKey
-        ? await fetchTmdbMatch(item.movieNm, item.openDt || null, tmdbApiKey)
-        : {
-            enTitle: null,
-            posterUrl: null,
-            overview: null,
-            voteAverage: null,
-            voteCount: null,
-          };
+    const {
+      enTitle,
+      posterUrl,
+      overview,
+      voteAverage,
+      voteCount,
+      genres,
+      trailerKey,
+      castNames,
+      director,
+    } = tmdbApiKey
+      ? await fetchTmdbMatch(item.movieNm, item.openDt || null, tmdbApiKey)
+      : {
+          enTitle: null,
+          posterUrl: null,
+          overview: null,
+          voteAverage: null,
+          voteCount: null,
+          genres: [] as string[],
+          trailerKey: null,
+          castNames: [] as string[],
+          director: null,
+        };
 
     rows.push({
       rank: Number(item.rank),
@@ -228,6 +373,10 @@ export async function GET(request: NextRequest) {
       overview,
       vote_average: voteAverage,
       vote_count: voteCount,
+      genres,
+      trailer_key: trailerKey,
+      cast_names: castNames,
+      director,
       audience_count: Number(item.audiCnt),
       audience_acc: Number(item.audiAcc),
       sales_amt: Number(item.salesAmt),

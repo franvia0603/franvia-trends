@@ -4,10 +4,35 @@ import { generateSlug } from "@/lib/slug";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Vercel Hobby 플랜에서 설정 가능한 최대값. 항목당 discover 결과 처리 +
+// videos + credits 호출이 순차로 도는 만큼 기본 10초 제한을 넘길 수 있어 늘려둔다.
+export const maxDuration = 60;
 
 const TMDB_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w342";
 
+// TMDB 장르 목록은 자주 바뀌지 않으므로, API 호출 없이 하드코딩된 매핑을 사용한다.
+// 출처: https://api.themoviedb.org/3/genre/tv/list?language=en-US
+const TV_GENRE_MAP: Record<number, string> = {
+  10759: "Action & Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  10762: "Kids",
+  9648: "Mystery",
+  10763: "News",
+  10764: "Reality",
+  10765: "Sci-Fi & Fantasy",
+  10766: "Soap",
+  10767: "Talk",
+  10768: "War & Politics",
+  37: "Western",
+};
+
 interface TmdbDiscoverItem {
+  id: number;
   name: string;
   original_name: string;
   overview: string;
@@ -16,10 +41,76 @@ interface TmdbDiscoverItem {
   vote_average: number;
   vote_count: number;
   popularity: number;
+  genre_ids?: number[];
 }
 
 interface TmdbDiscoverResponse {
   results?: TmdbDiscoverItem[];
+}
+
+interface TmdbVideo {
+  key: string;
+  site: string;
+  type: string;
+}
+
+interface TmdbVideosResponse {
+  results?: TmdbVideo[];
+}
+
+interface TmdbCastMember {
+  name: string;
+  order: number;
+}
+
+interface TmdbCreditsResponse {
+  cast?: TmdbCastMember[];
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchTrailerKey(
+  tvId: number,
+  tmdbApiKey: string,
+): Promise<string | null> {
+  try {
+    const url = new URL(`https://api.themoviedb.org/3/tv/${tvId}/videos`);
+    url.searchParams.set("api_key", tmdbApiKey);
+    url.searchParams.set("language", "en-US");
+
+    const res = await fetch(url.toString());
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as TmdbVideosResponse;
+    const trailer = (data.results ?? []).find(
+      (video) => video.type === "Trailer" && video.site === "YouTube",
+    );
+
+    return trailer?.key ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchCastNames(
+  tvId: number,
+  tmdbApiKey: string,
+): Promise<string[]> {
+  try {
+    const url = new URL(`https://api.themoviedb.org/3/tv/${tvId}/credits`);
+    url.searchParams.set("api_key", tmdbApiKey);
+    url.searchParams.set("language", "en-US");
+
+    const res = await fetch(url.toString());
+    if (!res.ok) return [];
+
+    const data = (await res.json()) as TmdbCreditsResponse;
+    return (data.cast ?? []).slice(0, 5).map((member) => member.name);
+  } catch {
+    return [];
+  }
 }
 
 // TMDB discover는 실시간 스냅샷이라 KOBIS와 달리 "오늘" 날짜(KST) 기준으로 저장한다.
@@ -78,25 +169,42 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const rows = topDramas.map((item, index) => ({
-    rank: index + 1,
-    rank_change: null,
-    title: item.original_name,
-    en_title: item.name,
-    slug: generateSlug(
-      item.name || item.original_name,
-      item.first_air_date,
-      `${rankDate}-rank${index + 1}`,
-    ),
-    poster_url: item.poster_path
-      ? `${TMDB_POSTER_BASE_URL}${item.poster_path}`
-      : null,
-    overview: item.overview || null,
-    first_air_date: item.first_air_date || null,
-    vote_average: item.vote_average,
-    vote_count: item.vote_count,
-    rank_date: rankDate,
-  }));
+  const rows = [];
+  for (const [index, item] of topDramas.entries()) {
+    const genres = (item.genre_ids ?? [])
+      .map((id) => TV_GENRE_MAP[id])
+      .filter((name): name is string => Boolean(name));
+
+    const [trailerKey, castNames] = await Promise.all([
+      fetchTrailerKey(item.id, tmdbApiKey),
+      fetchCastNames(item.id, tmdbApiKey),
+    ]);
+
+    rows.push({
+      rank: index + 1,
+      rank_change: null,
+      title: item.original_name,
+      en_title: item.name,
+      slug: generateSlug(
+        item.name || item.original_name,
+        item.first_air_date,
+        `${rankDate}-rank${index + 1}`,
+      ),
+      poster_url: item.poster_path
+        ? `${TMDB_POSTER_BASE_URL}${item.poster_path}`
+        : null,
+      overview: item.overview || null,
+      first_air_date: item.first_air_date || null,
+      vote_average: item.vote_average,
+      vote_count: item.vote_count,
+      genres,
+      trailer_key: trailerKey,
+      cast_names: castNames,
+      rank_date: rankDate,
+    });
+
+    await sleep(250);
+  }
 
   const supabase = createClient(supabaseUrl, supabaseSecretKey, {
     auth: { persistSession: false },
