@@ -56,6 +56,7 @@ interface DramaRow {
   en_title: string | null;
   poster_url: string | null;
   overview: string | null;
+  slug: string | null;
   netflix_weeks_in_top10?: number | null;
   rank_date: string;
 }
@@ -76,7 +77,7 @@ async function getLatestDramas(): Promise<DramaRow[]> {
 
   const { data, error } = await supabase
     .from("dramas")
-    .select("rank, title, en_title, poster_url, overview, rank_date")
+    .select("rank, title, en_title, poster_url, overview, slug, rank_date")
     .eq("rank_date", latest.rank_date)
     .order("rank", { ascending: true });
 
@@ -164,35 +165,51 @@ function DramaRankingSection({ dramas }: { dramas: DramaRow[] }) {
       </header>
 
       <ul className="divide-y divide-zinc-200 overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-        {dramas.map((drama) => (
-          <li
-            key={`${drama.title}-${drama.rank_date}`}
-            className="flex items-center gap-4 px-5 py-4"
-          >
-            <PosterThumbnail
-              posterUrl={drama.poster_url}
-              alt={drama.en_title || drama.title}
-            />
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-base font-bold text-white">
-              {drama.rank}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-semibold text-zinc-900">
-                {drama.en_title || drama.title}
-              </p>
-              {drama.overview && (
-                <p className="mt-0.5 line-clamp-2 text-sm text-zinc-500">
-                  {drama.overview}
+        {dramas.map((drama) => {
+          const cardContent = (
+            <>
+              <PosterThumbnail
+                posterUrl={drama.poster_url}
+                alt={drama.en_title || drama.title}
+              />
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-base font-bold text-white">
+                {drama.rank}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-semibold text-zinc-900">
+                  {drama.en_title || drama.title}
                 </p>
+                {drama.overview && (
+                  <p className="mt-0.5 line-clamp-2 text-sm text-zinc-500">
+                    {drama.overview}
+                  </p>
+                )}
+                {drama.netflix_weeks_in_top10 ? (
+                  <span className="mt-1.5 inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                    {drama.netflix_weeks_in_top10} weeks in Top 10
+                  </span>
+                ) : null}
+              </div>
+            </>
+          );
+
+          return (
+            <li key={`${drama.title}-${drama.rank_date}`}>
+              {drama.slug ? (
+                <Link
+                  href={`/dramas/${drama.slug}`}
+                  className="flex items-center gap-4 px-5 py-4 transition-all duration-300 hover:cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.35)] hover:ring-1 hover:ring-red-500/50"
+                >
+                  {cardContent}
+                </Link>
+              ) : (
+                <div className="flex items-center gap-4 px-5 py-4">
+                  {cardContent}
+                </div>
               )}
-              {drama.netflix_weeks_in_top10 ? (
-                <span className="mt-1.5 inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                  {drama.netflix_weeks_in_top10} weeks in Top 10
-                </span>
-              ) : null}
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
 
       <p className="mt-6 text-sm text-zinc-400">

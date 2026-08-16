@@ -121,7 +121,7 @@ export default async function FranviaEditorial() {
               href={post.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block h-full overflow-hidden rounded-2xl border border-zinc-200 bg-white transition-colors hover:border-zinc-300"
+              className="block h-full overflow-hidden rounded-2xl border border-zinc-200 bg-white transition-all duration-300 hover:cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.35)] hover:ring-1 hover:ring-red-500/50"
             >
               <div className="relative aspect-video w-full bg-zinc-100">
                 {post.thumbnailUrl && (
