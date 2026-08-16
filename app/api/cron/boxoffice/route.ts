@@ -29,11 +29,17 @@ interface TmdbSearchResult {
   title?: string;
   release_date?: string;
   poster_path?: string | null;
+  overview?: string;
+  vote_average?: number;
+  vote_count?: number;
 }
 
 interface TmdbMatch {
   enTitle: string | null;
   posterUrl: string | null;
+  overview: string | null;
+  voteAverage: number | null;
+  voteCount: number | null;
 }
 
 interface TmdbSearchResponse {
@@ -83,7 +89,13 @@ async function fetchTmdbMatch(
   openDt: string | null,
   tmdbApiKey: string,
 ): Promise<TmdbMatch> {
-  const empty: TmdbMatch = { enTitle: null, posterUrl: null };
+  const empty: TmdbMatch = {
+    enTitle: null,
+    posterUrl: null,
+    overview: null,
+    voteAverage: null,
+    voteCount: null,
+  };
 
   try {
     const url = new URL("https://api.themoviedb.org/3/search/movie");
@@ -112,7 +124,13 @@ async function fetchTmdbMatch(
     const title = match?.title;
     const enTitle = title && !containsHangul(title) ? title : null;
 
-    return { enTitle, posterUrl };
+    return {
+      enTitle,
+      posterUrl,
+      overview: match?.overview || null,
+      voteAverage: match?.vote_average ?? null,
+      voteCount: match?.vote_count ?? null,
+    };
   } catch {
     return empty;
   }
@@ -185,9 +203,16 @@ export async function GET(request: NextRequest) {
 
   const rows = [];
   for (const item of list) {
-    const { enTitle, posterUrl } = tmdbApiKey
-      ? await fetchTmdbMatch(item.movieNm, item.openDt || null, tmdbApiKey)
-      : { enTitle: null, posterUrl: null };
+    const { enTitle, posterUrl, overview, voteAverage, voteCount } =
+      tmdbApiKey
+        ? await fetchTmdbMatch(item.movieNm, item.openDt || null, tmdbApiKey)
+        : {
+            enTitle: null,
+            posterUrl: null,
+            overview: null,
+            voteAverage: null,
+            voteCount: null,
+          };
 
     rows.push({
       rank: Number(item.rank),
@@ -200,6 +225,9 @@ export async function GET(request: NextRequest) {
         `${targetDt}-rank${item.rank}`,
       ),
       poster_url: posterUrl,
+      overview,
+      vote_average: voteAverage,
+      vote_count: voteCount,
       audience_count: Number(item.audiCnt),
       audience_acc: Number(item.audiAcc),
       sales_amt: Number(item.salesAmt),
