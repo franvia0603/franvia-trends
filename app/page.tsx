@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
+import TopTicker from "@/components/TopTicker";
 import EditorCommentary from "@/components/EditorCommentary";
 import FranviaEditorial from "@/components/FranviaEditorial";
 
@@ -140,7 +142,7 @@ function PosterThumbnail({
 function DramaRankingSection({ dramas }: { dramas: DramaRow[] }) {
   if (dramas.length === 0) {
     return (
-      <article className="mx-auto w-full max-w-3xl px-6 pb-16">
+      <article id="k-drama" className="mx-auto w-full max-w-3xl scroll-mt-24 px-6 pb-16">
         <h2 className="text-2xl font-bold text-zinc-900">
           Trending K-Drama on Netflix
         </h2>
@@ -152,7 +154,7 @@ function DramaRankingSection({ dramas }: { dramas: DramaRow[] }) {
   }
 
   return (
-    <article className="mx-auto w-full max-w-3xl px-6 pb-16">
+    <article id="k-drama" className="mx-auto w-full max-w-3xl scroll-mt-24 px-6 pb-16">
       <header className="mb-8">
         <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
           Trending K-Drama on Netflix
@@ -203,13 +205,21 @@ export default async function Home() {
   const rows = await getLatestBoxOffice();
   const dramas = await getLatestDramas();
 
+  const tickerMovies = rows
+    .slice(0, 5)
+    .map((movie) => ({ rank: movie.rank, title: movie.en_title || movie.movie_name }));
+  const tickerDramas = dramas
+    .slice(0, 5)
+    .map((drama) => ({ rank: drama.rank, title: drama.en_title || drama.title }));
+
   if (rows.length === 0) {
     return (
       <>
         <SiteHeader />
+        <TopTicker movies={tickerMovies} dramas={tickerDramas} />
         <main className="flex flex-col">
           <EditorCommentary />
-          <article className="mx-auto w-full max-w-3xl px-6 py-16">
+          <article id="movies" className="mx-auto w-full max-w-3xl scroll-mt-24 px-6 py-16">
             <h1 className="text-2xl font-bold text-zinc-900">
               Today&apos;s K-Movie Box Office
             </h1>
@@ -220,6 +230,7 @@ export default async function Home() {
           <DramaRankingSection dramas={dramas} />
           <FranviaEditorial />
         </main>
+        <SiteFooter />
       </>
     );
   }
@@ -233,9 +244,10 @@ export default async function Home() {
   return (
     <>
       <SiteHeader />
+      <TopTicker movies={tickerMovies} dramas={tickerDramas} />
       <main className="flex flex-col">
         <EditorCommentary />
-        <article className="mx-auto w-full max-w-3xl px-6 py-16">
+        <article id="movies" className="mx-auto w-full max-w-3xl scroll-mt-24 px-6 py-16">
           <header className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
               Today&apos;s K-Movie Box Office
@@ -284,6 +296,7 @@ export default async function Home() {
         <DramaRankingSection dramas={dramas} />
         <FranviaEditorial />
       </main>
+      <SiteFooter />
     </>
   );
 }

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const TMDB_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w342";
 
-interface TmdbTrendingItem {
+interface TmdbDiscoverItem {
   name: string;
   original_name: string;
   overview: string;
@@ -14,14 +14,13 @@ interface TmdbTrendingItem {
   first_air_date: string;
   vote_average: number;
   popularity: number;
-  origin_country: string[];
 }
 
-interface TmdbTrendingResponse {
-  results?: TmdbTrendingItem[];
+interface TmdbDiscoverResponse {
+  results?: TmdbDiscoverItem[];
 }
 
-// TMDB trending은 실시간 스냅샷이라 KOBIS와 달리 "오늘" 날짜(KST) 기준으로 저장한다.
+// TMDB discover는 실시간 스냅샷이라 KOBIS와 달리 "오늘" 날짜(KST) 기준으로 저장한다.
 function getKstToday(): string {
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const yyyy = kstNow.getUTCFullYear();
@@ -49,9 +48,13 @@ export async function GET(request: NextRequest) {
 
   const rankDate = getKstToday();
 
-  const tmdbUrl = new URL("https://api.themoviedb.org/3/trending/tv/week");
+  const tmdbUrl = new URL("https://api.themoviedb.org/3/discover/tv");
   tmdbUrl.searchParams.set("api_key", tmdbApiKey);
   tmdbUrl.searchParams.set("language", "en-US");
+  tmdbUrl.searchParams.set("with_origin_country", "KR");
+  tmdbUrl.searchParams.set("with_genres", "18");
+  tmdbUrl.searchParams.set("sort_by", "popularity.desc");
+  tmdbUrl.searchParams.set("page", "1");
 
   const tmdbRes = await fetch(tmdbUrl.toString());
   if (!tmdbRes.ok) {
@@ -61,21 +64,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const tmdbData = (await tmdbRes.json()) as TmdbTrendingResponse;
-  const results = tmdbData.results ?? [];
+  const tmdbData = (await tmdbRes.json()) as TmdbDiscoverResponse;
+  const topDramas = (tmdbData.results ?? [])
+    .sort((a, b) => b.popularity - a.popularity)
+    .slice(0, 10);
 
-  const koreanDramas = results
-    .filter((item) => item.origin_country?.includes("KR"))
-    .sort((a, b) => b.popularity - a.popularity);
-
-  if (koreanDramas.length === 0) {
+  if (topDramas.length === 0) {
     return NextResponse.json({
-      message: "No Korean dramas found in TMDB trending results",
+      message: "No drama results returned from TMDB",
       rankDate,
     });
   }
 
-  const rows = koreanDramas.map((item, index) => ({
+  const rows = topDramas.map((item, index) => ({
     rank: index + 1,
     rank_change: null,
     title: item.original_name,

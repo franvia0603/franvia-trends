@@ -41,15 +41,17 @@ export default function SiteHeader() {
 
         <nav className="hidden items-center gap-6 md:flex">
           <a
-            href="/"
-            className="border-b-2 border-amber-400 pb-1 text-sm font-semibold text-amber-400"
+            href="#movies"
+            className="border-b-2 border-amber-400 pb-1 text-sm font-semibold text-amber-400 transition-colors hover:text-amber-400"
           >
             Movies
           </a>
-          <span className="flex cursor-default items-center gap-1.5 pb-1 text-sm font-medium text-zinc-500">
+          <a
+            href="#k-drama"
+            className="pb-1 text-sm font-semibold text-zinc-300 transition-colors hover:text-amber-400"
+          >
             K-Drama
-            <ComingSoonBadge />
-          </span>
+          </a>
           <span className="flex cursor-default items-center gap-1.5 pb-1 text-sm font-medium text-zinc-500">
             K-pop
             <ComingSoonBadge />
@@ -88,16 +90,19 @@ export default function SiteHeader() {
         <div className="border-t border-zinc-800 px-6 py-4 md:hidden">
           <nav className="flex flex-col gap-4">
             <a
-              href="/"
-              className="text-sm font-semibold text-amber-400"
+              href="#movies"
+              className="text-sm font-semibold text-amber-400 transition-colors hover:text-amber-400"
               onClick={() => setIsMenuOpen(false)}
             >
               Movies
             </a>
-            <span className="flex items-center gap-1.5 text-sm font-medium text-zinc-500">
+            <a
+              href="#k-drama"
+              className="text-sm font-semibold text-zinc-300 transition-colors hover:text-amber-400"
+              onClick={() => setIsMenuOpen(false)}
+            >
               K-Drama
-              <ComingSoonBadge />
-            </span>
+            </a>
             <span className="flex items-center gap-1.5 text-sm font-medium text-zinc-500">
               K-pop
               <ComingSoonBadge />
