@@ -14,6 +14,7 @@ interface TmdbDiscoverItem {
   poster_path: string | null;
   first_air_date: string;
   vote_average: number;
+  vote_count: number;
   popularity: number;
 }
 
@@ -93,6 +94,7 @@ export async function GET(request: NextRequest) {
     overview: item.overview || null,
     first_air_date: item.first_air_date || null,
     vote_average: item.vote_average,
+    vote_count: item.vote_count,
     rank_date: rankDate,
   }));
 
