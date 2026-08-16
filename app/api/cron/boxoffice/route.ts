@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateSlug } from "@/lib/slug";
+import { submitToIndexNow } from "@/lib/indexnow";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -397,6 +398,19 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  try {
+    const urlList = [
+      "https://trend.franvia.com/",
+      ...rows.map((row) => `https://trend.franvia.com/movies/${row.slug}`),
+    ];
+    const indexNowRes = await submitToIndexNow(urlList);
+    console.log(
+      `IndexNow submission (boxoffice): status ${indexNowRes.status}, ${urlList.length} URLs`,
+    );
+  } catch (indexNowError) {
+    console.error("IndexNow submission failed (boxoffice):", indexNowError);
   }
 
   return NextResponse.json({
