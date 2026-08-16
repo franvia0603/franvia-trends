@@ -46,6 +46,43 @@ async function getLatestBoxOffice(): Promise<BoxOfficeRow[]> {
   return data;
 }
 
+interface DramaRow {
+  rank: number;
+  title: string;
+  en_title: string | null;
+  poster_url: string | null;
+  overview: string | null;
+  netflix_weeks_in_top10?: number | null;
+  rank_date: string;
+}
+
+async function getLatestDramas(): Promise<DramaRow[]> {
+  const supabase = createSupabaseServerClient();
+
+  const { data: latest } = await supabase
+    .from("dramas")
+    .select("rank_date")
+    .order("rank_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!latest?.rank_date) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("dramas")
+    .select("rank, title, en_title, poster_url, overview, rank_date")
+    .eq("rank_date", latest.rank_date)
+    .order("rank", { ascending: true });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data;
+}
+
 function RankChangeBadge({ change }: { change: number }) {
   if (change > 0) {
     return (
@@ -100,8 +137,71 @@ function PosterThumbnail({
   );
 }
 
+function DramaRankingSection({ dramas }: { dramas: DramaRow[] }) {
+  if (dramas.length === 0) {
+    return (
+      <article className="mx-auto w-full max-w-3xl px-6 pb-16">
+        <h2 className="text-2xl font-bold text-zinc-900">
+          Trending K-Drama on Netflix
+        </h2>
+        <p className="mt-4 text-zinc-500">
+          No drama ranking data available yet. Please check back soon.
+        </p>
+      </article>
+    );
+  }
+
+  return (
+    <article className="mx-auto w-full max-w-3xl px-6 pb-16">
+      <header className="mb-8">
+        <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
+          Trending K-Drama on Netflix
+        </h2>
+      </header>
+
+      <ul className="divide-y divide-zinc-200 overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+        {dramas.map((drama) => (
+          <li
+            key={`${drama.title}-${drama.rank_date}`}
+            className="flex items-center gap-4 px-5 py-4"
+          >
+            <PosterThumbnail
+              posterUrl={drama.poster_url}
+              alt={drama.en_title || drama.title}
+            />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-base font-bold text-white">
+              {drama.rank}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-semibold text-zinc-900">
+                {drama.en_title || drama.title}
+              </p>
+              {drama.overview && (
+                <p className="mt-0.5 line-clamp-2 text-sm text-zinc-500">
+                  {drama.overview}
+                </p>
+              )}
+              {drama.netflix_weeks_in_top10 ? (
+                <span className="mt-1.5 inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                  {drama.netflix_weeks_in_top10} weeks in Top 10
+                </span>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-6 text-sm text-zinc-400">
+        Ranking based on TMDB&apos;s weekly trending TV data, filtered for
+        Korean titles. Poster and synopsis provided by TMDB.
+      </p>
+    </article>
+  );
+}
+
 export default async function Home() {
   const rows = await getLatestBoxOffice();
+  const dramas = await getLatestDramas();
 
   if (rows.length === 0) {
     return (
@@ -117,6 +217,7 @@ export default async function Home() {
               No box office data available yet. Please check back soon.
             </p>
           </article>
+          <DramaRankingSection dramas={dramas} />
           <FranviaEditorial />
         </main>
       </>
@@ -180,6 +281,7 @@ export default async function Home() {
             System), operated by the Korean Film Council (KOFIC).
           </p>
         </article>
+        <DramaRankingSection dramas={dramas} />
         <FranviaEditorial />
       </main>
     </>
