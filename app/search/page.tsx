@@ -238,9 +238,7 @@ export async function generateMetadata({
   const query = q?.trim();
 
   return {
-    title: query
-      ? `Search results for "${query}" | Franvia K-Trend Chart`
-      : "Search | Franvia K-Trend Chart",
+    title: query ? `Search results for "${query}"` : "Search",
   };
 }
 

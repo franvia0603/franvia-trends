@@ -116,14 +116,14 @@ export async function generateMetadata({
 
   if (!movie) {
     return {
-      title: "Movie Not Found | Franvia K-Trend Chart",
+      title: "Movie Not Found",
     };
   }
 
   const title = movie.en_title || movie.movie_name;
 
   return {
-    title: `${title} - K-Movie Box Office Ranking | Franvia K-Trend Chart`,
+    title: `${title} - K-Movie Box Office Ranking`,
     description: `See ${title}'s daily K-Movie box office rank, cumulative admissions, and ranking history on Franvia K-Trend Chart.`,
   };
 }

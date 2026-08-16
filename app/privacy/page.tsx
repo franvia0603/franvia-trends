@@ -5,7 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Privacy Policy | Franvia K-Trend Chart",
+    title: "Privacy Policy",
     description:
       "How Franvia K-Trend Chart collects, uses, and protects visitor information, including analytics, advertising, third-party data sources, and your privacy rights.",
   };

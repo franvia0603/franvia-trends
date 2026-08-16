@@ -5,7 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Contact Us | Franvia K-Trend Chart",
+    title: "Contact Us",
     description:
       "Reach the Franvia K-Trend Chart team about general questions, ranking data, or partnerships. All enquiries go to business@franvia.com.",
   };

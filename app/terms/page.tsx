@@ -5,7 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Terms of Use | Franvia K-Trend Chart",
+    title: "Terms of Use",
     description:
       "The terms governing your use of Franvia K-Trend Chart, including data accuracy, intellectual property, use restrictions, and liability limitations.",
   };

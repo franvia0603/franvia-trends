@@ -9,6 +9,32 @@ import FranviaEditorial from "@/components/FranviaEditorial";
 
 export const revalidate = 3600;
 
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      name: "Franvia",
+      url: "https://www.franvia.com",
+      email: "business@franvia.com",
+    },
+    {
+      "@type": "WebSite",
+      name: "Franvia K-Trend Chart",
+      url: "https://trend.franvia.com",
+    },
+  ],
+};
+
+function JsonLd() {
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+    />
+  );
+}
+
 interface BoxOfficeRow {
   rank: number;
   rank_change: number;
@@ -234,6 +260,7 @@ export default async function Home() {
   if (rows.length === 0) {
     return (
       <>
+        <JsonLd />
         <SiteHeader />
         <TopTicker movies={tickerMovies} dramas={tickerDramas} />
         <main className="flex flex-col">
@@ -264,6 +291,7 @@ export default async function Home() {
 
   return (
     <>
+      <JsonLd />
       <SiteHeader />
       <TopTicker movies={tickerMovies} dramas={tickerDramas} />
       <main className="flex flex-col">

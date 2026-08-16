@@ -5,7 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "About Us | Franvia K-Trend Chart",
+    title: "About Us",
     description:
       "Learn how Franvia K-Trend Chart sources its K-Movie box office and K-Drama rankings from KOBIS and TMDB, and how this site fits into the Franvia network.",
   };

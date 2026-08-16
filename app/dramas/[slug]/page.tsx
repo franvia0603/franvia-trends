@@ -94,14 +94,14 @@ export async function generateMetadata({
 
   if (!drama) {
     return {
-      title: "Drama Not Found | Franvia K-Trend Chart",
+      title: "Drama Not Found",
     };
   }
 
   const title = drama.en_title || drama.title;
 
   return {
-    title: `${title} - K-Drama Ranking | Franvia K-Trend Chart`,
+    title: `${title} - K-Drama Ranking`,
     description: `See ${title}'s K-Drama trending rank, TMDB rating, and ranking history on Franvia K-Trend Chart.`,
   };
 }
