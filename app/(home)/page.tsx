@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -14,6 +15,7 @@ interface BoxOfficeRow {
   movie_name: string;
   en_title: string | null;
   poster_url: string | null;
+  slug: string | null;
   audience_count: number;
   audience_acc: number;
   rank_date: string;
@@ -36,7 +38,7 @@ async function getLatestBoxOffice(): Promise<BoxOfficeRow[]> {
   const { data, error } = await supabase
     .from("boxoffice")
     .select(
-      "rank, rank_change, movie_name, en_title, poster_url, audience_count, audience_acc, rank_date",
+      "rank, rank_change, movie_name, en_title, poster_url, slug, audience_count, audience_acc, rank_date",
     )
     .eq("rank_date", latest.rank_date)
     .order("rank", { ascending: true });
@@ -258,34 +260,51 @@ export default async function Home() {
           </header>
 
           <ul className="divide-y divide-zinc-200 overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-            {rows.map((movie) => (
-              <li
-                key={`${movie.movie_name}-${movie.rank_date}`}
-                className="flex items-center gap-4 px-5 py-4"
-              >
-                <PosterThumbnail
-                  posterUrl={movie.poster_url}
-                  alt={movie.en_title || movie.movie_name}
-                />
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-base font-bold text-white">
-                  {movie.rank}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-semibold text-zinc-900">
-                    {movie.en_title || movie.movie_name}
-                  </p>
-                  <p className="mt-0.5 text-sm text-zinc-500">
-                    Cumulative admissions: {movie.audience_acc.toLocaleString("en-US")}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <RankChangeBadge change={movie.rank_change} />
-                  <span className="text-sm text-zinc-600">
-                    {movie.audience_count.toLocaleString("en-US")}
+            {rows.map((movie) => {
+              const cardContent = (
+                <>
+                  <PosterThumbnail
+                    posterUrl={movie.poster_url}
+                    alt={movie.en_title || movie.movie_name}
+                  />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-base font-bold text-white">
+                    {movie.rank}
                   </span>
-                </div>
-              </li>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-semibold text-zinc-900">
+                      {movie.en_title || movie.movie_name}
+                    </p>
+                    <p className="mt-0.5 text-sm text-zinc-500">
+                      Cumulative admissions:{" "}
+                      {movie.audience_acc.toLocaleString("en-US")}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <RankChangeBadge change={movie.rank_change} />
+                    <span className="text-sm text-zinc-600">
+                      {movie.audience_count.toLocaleString("en-US")}
+                    </span>
+                  </div>
+                </>
+              );
+
+              return (
+                <li key={`${movie.movie_name}-${movie.rank_date}`}>
+                  {movie.slug ? (
+                    <Link
+                      href={`/movies/${movie.slug}`}
+                      className="flex items-center gap-4 px-5 py-4 transition-all duration-300 hover:cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.35)] hover:ring-1 hover:ring-red-500/50"
+                    >
+                      {cardContent}
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-4 px-5 py-4">
+                      {cardContent}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
 
           <p className="mt-6 text-sm text-zinc-400">

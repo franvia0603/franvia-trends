@@ -1,0 +1,221 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+interface MoviePageProps {
+  params: Promise<{ slug: string }>;
+}
+
+interface BoxOfficeDetail {
+  rank: number;
+  rank_change: number;
+  movie_name: string;
+  en_title: string | null;
+  poster_url: string | null;
+  audience_count: number;
+  audience_acc: number;
+  open_dt: string | null;
+  rank_date: string;
+  slug: string;
+}
+
+interface RankHistoryEntry {
+  rank_date: string;
+  rank: number;
+  rank_change: number;
+}
+
+async function getMovie(slug: string): Promise<BoxOfficeDetail | null> {
+  const supabase = createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("boxoffice")
+    .select(
+      "rank, rank_change, movie_name, en_title, poster_url, audience_count, audience_acc, open_dt, rank_date, slug",
+    )
+    .eq("slug", slug)
+    .order("rank_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data;
+}
+
+async function getMovieHistory(slug: string): Promise<RankHistoryEntry[]> {
+  const supabase = createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("boxoffice")
+    .select("rank_date, rank, rank_change")
+    .eq("slug", slug)
+    .order("rank_date", { ascending: false })
+    .limit(7);
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data;
+}
+
+function RankChangeBadge({ change }: { change: number }) {
+  if (change > 0) {
+    return (
+      <span className="inline-flex items-center gap-0.5 text-sm font-semibold text-red-500">
+        ▲ {change}
+      </span>
+    );
+  }
+  if (change < 0) {
+    return (
+      <span className="inline-flex items-center gap-0.5 text-sm font-semibold text-blue-500">
+        ▼ {Math.abs(change)}
+      </span>
+    );
+  }
+  return <span className="text-sm font-semibold text-zinc-400">–</span>;
+}
+
+export async function generateMetadata({
+  params,
+}: MoviePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const movie = await getMovie(slug);
+
+  if (!movie) {
+    return {
+      title: "Movie Not Found | Franvia K-Trend Chart",
+    };
+  }
+
+  const title = movie.en_title || movie.movie_name;
+
+  return {
+    title: `${title} - K-Movie Box Office Ranking | Franvia K-Trend Chart`,
+    description: `See ${title}'s daily K-Movie box office rank, cumulative admissions, and ranking history on Franvia K-Trend Chart.`,
+  };
+}
+
+export default async function MoviePage({ params }: MoviePageProps) {
+  const { slug } = await params;
+  const movie = await getMovie(slug);
+
+  if (!movie) {
+    notFound();
+  }
+
+  const history = await getMovieHistory(slug);
+  const title = movie.en_title || movie.movie_name;
+  const showSubtitle = movie.en_title && movie.en_title !== movie.movie_name;
+
+  const formattedOpenDt = movie.open_dt
+    ? new Date(movie.open_dt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
+
+  return (
+    <main className="mx-auto w-full max-w-3xl px-6 py-16">
+      <Link
+        href="/"
+        className="text-sm font-medium text-zinc-500 transition-colors hover:text-amber-500"
+      >
+        ← Back to Rankings
+      </Link>
+
+      <div className="mt-8 flex flex-col gap-6 sm:flex-row">
+        <div className="relative h-72 w-48 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
+          {movie.poster_url ? (
+            <Image
+              src={movie.poster_url}
+              alt={title}
+              fill
+              sizes="192px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm text-zinc-400">
+              No poster
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col justify-center">
+          <h1 className="text-3xl font-bold text-zinc-900">{title}</h1>
+          {showSubtitle && (
+            <p className="mt-1 text-base text-zinc-500">{movie.movie_name}</p>
+          )}
+
+          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+            {formattedOpenDt && (
+              <div>
+                <dt className="text-zinc-400">Release Date</dt>
+                <dd className="mt-0.5 font-medium text-zinc-900">
+                  {formattedOpenDt}
+                </dd>
+              </div>
+            )}
+            <div>
+              <dt className="text-zinc-400">Current Rank</dt>
+              <dd className="mt-0.5 font-medium text-zinc-900">
+                #{movie.rank}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-zinc-400">Rank Change</dt>
+              <dd className="mt-0.5">
+                <RankChangeBadge change={movie.rank_change} />
+              </dd>
+            </div>
+            <div>
+              <dt className="text-zinc-400">Cumulative Admissions</dt>
+              <dd className="mt-0.5 font-medium text-zinc-900">
+                {movie.audience_acc.toLocaleString("en-US")}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <section className="mt-12">
+        <h2 className="text-lg font-bold text-zinc-900">
+          Ranking History (Last 7 Days)
+        </h2>
+        <ul className="mt-4 divide-y divide-zinc-200 overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+          {history.map((entry) => (
+            <li
+              key={entry.rank_date}
+              className="flex items-center justify-between px-5 py-3 text-sm"
+            >
+              <span className="text-zinc-500">
+                {new Date(entry.rank_date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+              <span className="flex items-center gap-3">
+                <span className="font-semibold text-zinc-900">
+                  #{entry.rank}
+                </span>
+                <RankChangeBadge change={entry.rank_change} />
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <p className="mt-10 text-sm text-zinc-400">
+        Box office data sourced from KOBIS (Korean Box office Information
+        System), operated by the Korean Film Council (KOFIC).
+      </p>
+    </main>
+  );
+}
