@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const SECTION_IDS = ["movies", "k-drama"] as const;
+type SectionId = (typeof SECTION_IDS)[number];
 
 function ComingSoonBadge() {
   return (
@@ -23,8 +26,54 @@ function VisitFranviaButton({ className = "" }: { className?: string }) {
   );
 }
 
+function desktopNavLinkClass(active: boolean): string {
+  const base =
+    "border-b-2 pb-1 text-sm font-semibold transition-colors hover:text-amber-400";
+  return active
+    ? `${base} border-amber-400 text-amber-400`
+    : `${base} border-transparent text-zinc-300`;
+}
+
+function mobileNavLinkClass(active: boolean): string {
+  const base = "text-sm font-semibold transition-colors hover:text-amber-400";
+  return active ? `${base} text-amber-400` : `${base} text-zinc-300`;
+}
+
 export default function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<SectionId>("movies");
+
+  useEffect(() => {
+    const elements = SECTION_IDS.map((id) => document.getElementById(id)).filter(
+      (el): el is HTMLElement => el !== null,
+    );
+
+    if (elements.length === 0) {
+      return;
+    }
+
+    // 스티키 헤더/티커 높이만큼 위쪽을 제외하고, 화면 상단 근처에
+    // 걸린 섹션만 "활성"으로 감지한다.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id as SectionId);
+        }
+      },
+      {
+        rootMargin: "-96px 0px -70% 0px",
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      },
+    );
+
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-900">
@@ -42,13 +91,13 @@ export default function SiteHeader() {
         <nav className="hidden items-center gap-6 md:flex">
           <a
             href="#movies"
-            className="border-b-2 border-amber-400 pb-1 text-sm font-semibold text-amber-400 transition-colors hover:text-amber-400"
+            className={desktopNavLinkClass(activeSection === "movies")}
           >
             Movies
           </a>
           <a
             href="#k-drama"
-            className="pb-1 text-sm font-semibold text-zinc-300 transition-colors hover:text-amber-400"
+            className={desktopNavLinkClass(activeSection === "k-drama")}
           >
             K-Drama
           </a>
@@ -91,14 +140,14 @@ export default function SiteHeader() {
           <nav className="flex flex-col gap-4">
             <a
               href="#movies"
-              className="text-sm font-semibold text-amber-400 transition-colors hover:text-amber-400"
+              className={mobileNavLinkClass(activeSection === "movies")}
               onClick={() => setIsMenuOpen(false)}
             >
               Movies
             </a>
             <a
               href="#k-drama"
-              className="text-sm font-semibold text-zinc-300 transition-colors hover:text-amber-400"
+              className={mobileNavLinkClass(activeSection === "k-drama")}
               onClick={() => setIsMenuOpen(false)}
             >
               K-Drama
