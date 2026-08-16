@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import TopTicker from "@/components/TopTicker";
+import LiveClock from "@/components/LiveClock";
 import EditorCommentary from "@/components/EditorCommentary";
 import FranviaEditorial from "@/components/FranviaEditorial";
 
@@ -262,6 +263,7 @@ export default async function Home() {
       <>
         <JsonLd />
         <SiteHeader />
+        <LiveClock />
         <TopTicker movies={tickerMovies} dramas={tickerDramas} />
         <main className="flex flex-col">
           <EditorCommentary />
@@ -293,6 +295,7 @@ export default async function Home() {
     <>
       <JsonLd />
       <SiteHeader />
+      <LiveClock />
       <TopTicker movies={tickerMovies} dramas={tickerDramas} />
       <main className="flex flex-col">
         <EditorCommentary />
