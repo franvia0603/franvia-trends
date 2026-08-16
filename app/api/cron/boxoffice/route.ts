@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { generateSlug } from "@/lib/slug";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -193,6 +194,11 @@ export async function GET(request: NextRequest) {
       rank_change: Number(item.rankInten),
       movie_name: item.movieNm,
       en_title: enTitle,
+      slug: generateSlug(
+        enTitle || item.movieNm,
+        item.openDt,
+        `${targetDt}-rank${item.rank}`,
+      ),
       poster_url: posterUrl,
       audience_count: Number(item.audiCnt),
       audience_acc: Number(item.audiAcc),

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { generateSlug } from "@/lib/slug";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,6 +82,11 @@ export async function GET(request: NextRequest) {
     rank_change: null,
     title: item.original_name,
     en_title: item.name,
+    slug: generateSlug(
+      item.name || item.original_name,
+      item.first_air_date,
+      `${rankDate}-rank${index + 1}`,
+    ),
     poster_url: item.poster_path
       ? `${TMDB_POSTER_BASE_URL}${item.poster_path}`
       : null,
