@@ -12,8 +12,18 @@ interface TopTickerProps {
   dramas: TickerItem[];
 }
 
-function formatItems(items: TickerItem[]): string {
-  return items.map((item) => `#${item.rank} ${item.title}`).join(" · ");
+function TickerItems({ items }: { items: TickerItem[] }) {
+  return (
+    <>
+      {items.map((item, index) => (
+        <span key={item.rank}>
+          {index > 0 && <span className="mx-2 text-zinc-500">·</span>}
+          <span className="font-bold text-amber-400">#{item.rank}</span>
+          <span className="ml-1.5 font-normal text-white">{item.title}</span>
+        </span>
+      ))}
+    </>
+  );
 }
 
 export default function TopTicker({ movies, dramas }: TopTickerProps) {
@@ -36,24 +46,13 @@ export default function TopTicker({ movies, dramas }: TopTickerProps) {
   }, [isPaused]);
 
   const slides = [
-    {
-      emoji: "🎬",
-      label: "Movies",
-      content: movies.length > 0 ? formatItems(movies) : null,
-    },
-    {
-      emoji: "📺",
-      label: "K-Drama",
-      content: dramas.length > 0 ? formatItems(dramas) : null,
-    },
-    {
-      emoji: "🎵",
-      label: "K-pop",
-      content: "Coming soon",
-    },
+    { emoji: "🎬", label: "Movies", items: movies },
+    { emoji: "📺", label: "K-Drama", items: dramas },
+    { emoji: "🎵", label: "K-pop", items: [] as TickerItem[] },
   ];
 
   const current = slides[index];
+  const isKpop = index === 2;
 
   return (
     <div
@@ -62,14 +61,19 @@ export default function TopTicker({ movies, dramas }: TopTickerProps) {
       onMouseLeave={() => setIsPaused(false)}
     >
       <p
-        className={`truncate text-xs font-medium sm:text-sm ${
+        className={`truncate text-xs sm:text-sm ${
           visible ? "opacity-100" : "opacity-0"
         } transition-opacity duration-300`}
       >
         <span className="mr-1.5">{current.emoji}</span>
         <span className="font-semibold text-amber-400">{current.label}</span>
-        {current.content && (
-          <span className="ml-2 text-white">{current.content}</span>
+        {current.items.length > 0 && (
+          <span className="ml-2">
+            <TickerItems items={current.items} />
+          </span>
+        )}
+        {isKpop && (
+          <span className="ml-2 font-normal text-white">Coming soon</span>
         )}
       </p>
     </div>

@@ -16,7 +16,7 @@ function VisitFranviaButton({ className = "" }: { className?: string }) {
       href="https://www.franvia.com"
       target="_blank"
       rel="noopener noreferrer"
-      className={`rounded-full border border-amber-400 px-4 py-1.5 text-sm font-medium text-amber-400 transition-colors hover:bg-amber-400 hover:text-zinc-900 ${className}`}
+      className={`rounded-full bg-amber-400 px-5 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-amber-300 ${className}`}
     >
       Visit Franvia.com
     </a>
