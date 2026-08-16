@@ -84,11 +84,13 @@ function parseFeed(xml: string, limit: number): FranviaPost[] {
   return posts;
 }
 
-async function getLatestFranviaPosts(): Promise<FranviaPost[]> {
+async function getLatestFranviaPosts(label?: string): Promise<FranviaPost[]> {
   try {
-    const res = await fetch(
-      "https://www.franvia.com/feeds/posts/default?max-results=6",
-    );
+    const feedUrl = label
+      ? `https://www.franvia.com/feeds/posts/default/-/${label}?max-results=6`
+      : "https://www.franvia.com/feeds/posts/default?max-results=6";
+
+    const res = await fetch(feedUrl);
 
     if (!res.ok) {
       return [];
@@ -101,33 +103,47 @@ async function getLatestFranviaPosts(): Promise<FranviaPost[]> {
   }
 }
 
-export default async function FranviaEditorial() {
-  const posts = await getLatestFranviaPosts();
+const DEFAULT_TITLE = "More from Franvia";
+
+interface FranviaEditorialProps {
+  label?: string;
+  title?: string;
+}
+
+export default async function FranviaEditorial({
+  label,
+  title = DEFAULT_TITLE,
+}: FranviaEditorialProps = {}) {
+  const posts = await getLatestFranviaPosts(label);
 
   if (posts.length === 0) {
     return null;
   }
 
+  const showBanner = title === DEFAULT_TITLE;
+
   return (
     <section className="mx-auto w-full max-w-3xl px-6 pb-16">
       <h2 className="text-xl font-bold tracking-tight text-zinc-900">
-        More from Franvia
+        {title}
       </h2>
 
-      <a
-        href="https://www.franvia.com/p/franvia-hello.html"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 block rounded-xl bg-zinc-100 p-6 transition-all duration-300 hover:cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.35)] hover:ring-1 hover:ring-red-500/50"
-      >
-        <p className="text-xl font-bold text-zinc-900">
-          FRANVIA | BEYOND K-VIBE
-        </p>
-        <p className="mt-1.5 text-sm text-zinc-500">
-          From K-Media and Food to practical Korean used in daily life and
-          K-Dramas.
-        </p>
-      </a>
+      {showBanner && (
+        <a
+          href="https://www.franvia.com/p/franvia-hello.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 block rounded-xl bg-zinc-100 p-6 transition-all duration-300 hover:cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.35)] hover:ring-1 hover:ring-red-500/50"
+        >
+          <p className="text-xl font-bold text-zinc-900">
+            FRANVIA | BEYOND K-VIBE
+          </p>
+          <p className="mt-1.5 text-sm text-zinc-500">
+            From K-Media and Food to practical Korean used in daily life and
+            K-Dramas.
+          </p>
+        </a>
+      )}
 
       <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {posts.map((post) => (

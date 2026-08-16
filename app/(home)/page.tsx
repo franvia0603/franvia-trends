@@ -247,6 +247,8 @@ export default async function Home() {
             </p>
           </article>
           <DramaRankingSection dramas={dramas} />
+          <FranviaEditorial label="recipe" title="Trending K-Food" />
+          <FranviaEditorial label="kbeauty" title="Trending K-Beauty" />
           <FranviaEditorial />
         </main>
         <SiteFooter />
@@ -330,6 +332,8 @@ export default async function Home() {
           </p>
         </article>
         <DramaRankingSection dramas={dramas} />
+        <FranviaEditorial label="recipe" title="Trending K-Food" />
+        <FranviaEditorial label="kbeauty" title="Trending K-Beauty" />
         <FranviaEditorial />
       </main>
       <SiteFooter />
