@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ShareButtons from "@/components/ShareButtons";
 import BookmarkButton from "@/components/BookmarkButton";
+import MyPickCardButton from "@/components/MyPickCardButton";
 
 interface DramaPageProps {
   params: Promise<{ slug: string }>;
@@ -220,6 +221,16 @@ export default async function DramaPage({ params }: DramaPageProps) {
           slug={slug}
           contentType="drama"
           title={title}
+          posterUrl={drama.poster_url ?? undefined}
+        />
+      </div>
+
+      <div className="mt-4">
+        <MyPickCardButton
+          slug={slug}
+          contentType="drama"
+          title={title}
+          rank={drama.rank}
           posterUrl={drama.poster_url ?? undefined}
         />
       </div>

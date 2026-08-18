@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ShareButtons from "@/components/ShareButtons";
 import BookmarkButton from "@/components/BookmarkButton";
+import MyPickCardButton from "@/components/MyPickCardButton";
 
 interface MoviePageProps {
   params: Promise<{ slug: string }>;
@@ -264,6 +265,16 @@ export default async function MoviePage({ params }: MoviePageProps) {
           slug={slug}
           contentType="movie"
           title={title}
+          posterUrl={movie.poster_url ?? undefined}
+        />
+      </div>
+
+      <div className="mt-4">
+        <MyPickCardButton
+          slug={slug}
+          contentType="movie"
+          title={title}
+          rank={movie.rank}
           posterUrl={movie.poster_url ?? undefined}
         />
       </div>
