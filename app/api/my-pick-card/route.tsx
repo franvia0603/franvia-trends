@@ -19,7 +19,7 @@ async function verifyImageUrl(url: string | null): Promise<string | null> {
   }
 }
 
-function PosterOrFallback({ posterUrl }: { posterUrl: string | null }) {
+function ImageOrFallback({ imageUrl }: { imageUrl: string | null }) {
   // next/og(satori)는 flex:1 + width:100%만으로는 <img>의 cover 크기를
   // 정확히 계산하지 못해, 크기가 확정된 relative 컨테이너 안에 이미지를
   // absolute로 채우는 방식으로 우회한다.
@@ -35,10 +35,10 @@ function PosterOrFallback({ posterUrl }: { posterUrl: string | null }) {
         position: "relative",
       }}
     >
-      {posterUrl && (
+      {imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={posterUrl}
+          src={imageUrl}
           alt=""
           style={{
             position: "absolute",
@@ -56,14 +56,16 @@ function PosterOrFallback({ posterUrl }: { posterUrl: string | null }) {
 
 function CardLayout({
   title,
-  rank,
+  subtitle,
   siteLabel,
-  posterUrl,
+  badgeText,
+  imageUrl,
 }: {
   title: string;
-  rank: string;
+  subtitle: string;
   siteLabel: string;
-  posterUrl: string | null;
+  badgeText: string;
+  imageUrl: string | null;
 }) {
   return (
     <div
@@ -92,10 +94,10 @@ function CardLayout({
           letterSpacing: 2,
         }}
       >
-        MY PICK
+        {badgeText}
       </div>
 
-      <PosterOrFallback posterUrl={posterUrl} />
+      <ImageOrFallback imageUrl={imageUrl} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div
@@ -103,11 +105,13 @@ function CardLayout({
         >
           {title}
         </div>
-        <div
-          style={{ display: "flex", fontSize: 24, fontWeight: 600, color: "#fbbf24" }}
-        >
-          #{rank} this week
-        </div>
+        {subtitle && (
+          <div
+            style={{ display: "flex", fontSize: 24, fontWeight: 600, color: "#fbbf24" }}
+          >
+            {subtitle}
+          </div>
+        )}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -148,17 +152,19 @@ function CardLayout({
 
 function renderCard(
   title: string,
-  rank: string,
+  subtitle: string,
   siteLabel: string,
-  posterUrl: string | null,
+  badgeText: string,
+  imageUrl: string | null,
 ) {
   return new ImageResponse(
     (
       <CardLayout
         title={title}
-        rank={rank}
+        subtitle={subtitle}
         siteLabel={siteLabel}
-        posterUrl={posterUrl}
+        badgeText={badgeText}
+        imageUrl={imageUrl}
       />
     ),
     CARD_SIZE,
@@ -167,22 +173,33 @@ function renderCard(
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const title = searchParams.get("title") || "Untitled";
-  const rank = searchParams.get("rank") || "-";
-  const siteLabel = searchParams.get("siteLabel") || "trend.franvia.com";
-  const rawPosterUrl = searchParams.get("posterUrl");
 
-  // posterUrl이 실제로 유효한 이미지로 응답하는지 미리 확인해서, next/og
+  const title = searchParams.get("title") || "Untitled";
+  const badgeText = searchParams.get("badgeText") || "MY PICK";
+  const siteLabel = searchParams.get("siteLabel") || "franvia.com";
+
+  // subtitle/imageUrl이 새 파라미터명. rank/posterUrl은 movies·dramas
+  // 상세페이지가 이미 쓰고 있던 구 파라미터라, 값이 오면 그대로 매핑해
+  // 호출부를 건드리지 않고도 계속 동작하도록 하위 호환을 유지한다.
+  const rawSubtitle = searchParams.get("subtitle");
+  const rank = searchParams.get("rank");
+  const subtitle = rawSubtitle ?? (rank ? `#${rank} this week` : "");
+
+  const rawImageUrl = searchParams.get("imageUrl");
+  const posterUrl = searchParams.get("posterUrl");
+  const rawImage = rawImageUrl ?? posterUrl;
+
+  // imageUrl이 실제로 유효한 이미지로 응답하는지 미리 확인해서, next/og
   // 렌더링 도중 원격 이미지 fetch가 실패해 500이 나는 상황을 피한다.
-  const posterUrl = await verifyImageUrl(rawPosterUrl);
+  const imageUrl = await verifyImageUrl(rawImage);
 
   try {
-    return renderCard(title, rank, siteLabel, posterUrl);
+    return renderCard(title, subtitle, siteLabel, badgeText, imageUrl);
   } catch {
     try {
-      return renderCard(title, rank, siteLabel, null);
+      return renderCard(title, subtitle, siteLabel, badgeText, null);
     } catch {
-      return renderCard("Franvia K-Trend Chart", "-", siteLabel, null);
+      return renderCard("Franvia K-Trend Chart", "", siteLabel, badgeText, null);
     }
   }
 }

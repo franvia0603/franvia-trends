@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { Sparkles, Download, Share2, Loader2 } from "lucide-react";
+import {
+  fetchCardImageBlob,
+  triggerBlobDownload,
+  downloadCardImage,
+} from "@/lib/my-pick-card";
 
 interface MyPickCardButtonProps {
   slug: string;
@@ -34,26 +39,12 @@ export default function MyPickCardButton({
     siteLabel: SITE_LABEL,
   }).toString()}`;
 
-  async function fetchCardBlob(): Promise<Blob> {
-    const res = await fetch(cardImageUrl);
-    if (!res.ok) {
-      throw new Error("Failed to generate My Pick card");
-    }
-    return res.blob();
-  }
+  const filename = `franvia-my-pick-${slug}.png`;
 
   async function handleDownload() {
     setDownloading(true);
     try {
-      const blob = await fetchCardBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `franvia-my-pick-${slug}.png`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      await downloadCardImage(cardImageUrl, filename);
     } catch {
       // 다운로드 실패는 조용히 무시하고 버튼 상태만 원복한다
     } finally {
@@ -64,10 +55,8 @@ export default function MyPickCardButton({
   async function handleShare() {
     setSharing(true);
     try {
-      const blob = await fetchCardBlob();
-      const file = new File([blob], `franvia-my-pick-${slug}.png`, {
-        type: "image/png",
-      });
+      const blob = await fetchCardImageBlob(cardImageUrl);
+      const file = new File([blob], filename, { type: "image/png" });
 
       if (
         typeof navigator.canShare === "function" &&
@@ -75,7 +64,7 @@ export default function MyPickCardButton({
       ) {
         await navigator.share({ files: [file], title: `${title} — My Pick` });
       } else {
-        await handleDownload();
+        triggerBlobDownload(blob, filename);
       }
     } catch {
       // 사용자가 공유를 취소한 경우 등은 무시
