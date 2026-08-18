@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, Copy, Check } from "lucide-react";
 import { downloadCardImage } from "@/lib/my-pick-card";
 
 type SiteLabel = "franvia.com" | "trend.franvia.com";
+type Platform = "Instagram" | "Pinterest" | "Facebook";
 
 interface FormValues {
   title: string;
@@ -12,6 +13,9 @@ interface FormValues {
   imageUrl: string;
   badgeText: string;
   siteLabel: SiteLabel;
+  articleUrl: string;
+  platform: Platform;
+  caption: string;
 }
 
 const DEFAULT_VALUES: FormValues = {
@@ -20,10 +24,18 @@ const DEFAULT_VALUES: FormValues = {
   imageUrl: "",
   badgeText: "FRANVIA PICK",
   siteLabel: "franvia.com",
+  articleUrl: "",
+  platform: "Instagram",
+  caption: "",
 };
+
+const PLATFORMS: Platform[] = ["Instagram", "Pinterest", "Facebook"];
 
 const INPUT_CLASS =
   "mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-amber-400";
+
+const COPY_BUTTON_CLASS =
+  "inline-flex shrink-0 items-center gap-1.5 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-50";
 
 function slugifyForFilename(text: string): string {
   const slug = text
@@ -45,6 +57,42 @@ function buildCardUrl(values: FormValues): string {
   return `/api/my-pick-card?${params.toString()}`;
 }
 
+function buildShareUrl(articleUrl: string, platform: Platform): string {
+  const trimmed = articleUrl.trim();
+  if (!trimmed) return "";
+
+  const separator = trimmed.includes("?") ? "&" : "?";
+  const utmSource = platform.toLowerCase();
+  return `${trimmed}${separator}utm_source=${utmSource}&utm_medium=manual&utm_campaign=my_pick_card`;
+}
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // 클립보드 권한이 없는 환경 등은 무시
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      disabled={!value}
+      aria-label="복사"
+      className={COPY_BUTTON_CLASS}
+    >
+      {copied ? <Check size={14} /> : <Copy size={14} />}
+      {copied ? "복사됨" : "복사"}
+    </button>
+  );
+}
+
 export default function CardGeneratorForm() {
   const [values, setValues] = useState<FormValues>(DEFAULT_VALUES);
   const [previewValues, setPreviewValues] = useState<FormValues>(DEFAULT_VALUES);
@@ -55,6 +103,7 @@ export default function CardGeneratorForm() {
   const hasRequiredFields = values.title.trim() !== "" && values.imageUrl.trim() !== "";
   const previewReady =
     previewValues.title.trim() !== "" && previewValues.imageUrl.trim() !== "";
+  const shareUrl = buildShareUrl(values.articleUrl, values.platform);
 
   // 입력할 때마다 바로 요청을 보내지 않고, 타이핑이 잠시 멈췄을 때만
   // 미리보기를 갱신해 /api/my-pick-card 호출 횟수를 줄인다.
@@ -154,6 +203,52 @@ export default function CardGeneratorForm() {
           </div>
         </fieldset>
 
+        <label className="block text-sm font-medium text-zinc-300">
+          Article URL
+          <input
+            type="url"
+            value={values.articleUrl}
+            onChange={(e) => updateField("articleUrl", e.target.value)}
+            placeholder="https://www.franvia.com/..."
+            className={INPUT_CLASS}
+          />
+        </label>
+
+        <fieldset>
+          <legend className="text-sm font-medium text-zinc-300">
+            Platform
+          </legend>
+          <div className="mt-1 flex gap-4">
+            {PLATFORMS.map((option) => (
+              <label
+                key={option}
+                className="flex items-center gap-1.5 text-sm text-zinc-300"
+              >
+                <input
+                  type="radio"
+                  name="platform"
+                  value={option}
+                  checked={values.platform === option}
+                  onChange={() => updateField("platform", option)}
+                  className="accent-amber-400"
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <label className="block text-sm font-medium text-zinc-300">
+          Caption
+          <textarea
+            value={values.caption}
+            onChange={(e) => updateField("caption", e.target.value)}
+            placeholder="게시물에 쓸 캡션을 입력하세요"
+            rows={4}
+            className={`${INPUT_CLASS} resize-none`}
+          />
+        </label>
+
         {!hasRequiredFields && (
           <p className="text-sm text-zinc-500">
             Title과 Image URL을 입력하면 미리보기와 다운로드가 활성화됩니다.
@@ -211,6 +306,45 @@ export default function CardGeneratorForm() {
           )}
           Download
         </button>
+
+        <div className="mt-8 w-full">
+          <p className="text-sm font-medium text-zinc-300">공유용 URL</p>
+          {shareUrl ? (
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={shareUrl}
+                className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-300 outline-none"
+              />
+              <CopyButton value={shareUrl} />
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-zinc-500">
+              Article URL을 입력하면 UTM 파라미터가 포함된 공유용 URL이
+              여기에 표시됩니다.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-6 w-full">
+          <p className="text-sm font-medium text-zinc-300">캡션</p>
+          {values.caption ? (
+            <div className="mt-1 flex items-start gap-2">
+              <textarea
+                readOnly
+                value={values.caption}
+                rows={4}
+                className="min-w-0 flex-1 resize-none rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-300 outline-none"
+              />
+              <CopyButton value={values.caption} />
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-zinc-500">
+              Caption을 입력하면 여기에 표시됩니다.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
