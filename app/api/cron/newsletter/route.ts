@@ -142,7 +142,7 @@ interface BloggerFeedEntry {
 async function getFranviaPosts(): Promise<FranviaPost[]> {
   try {
     const res = await fetch(
-      "https://www.franvia.com/feeds/posts/default?alt=json&max-results=2",
+      "https://www.franvia.com/feeds/posts/default?alt=json&max-results=4",
     );
     if (!res.ok) return [];
 
@@ -150,7 +150,7 @@ async function getFranviaPosts(): Promise<FranviaPost[]> {
     const entries: BloggerFeedEntry[] = data?.feed?.entry ?? [];
 
     return entries
-      .slice(0, 2)
+      .slice(0, 4)
       .map((entry) => {
         const altLink = (entry.link ?? []).find((l) => l.rel === "alternate");
         const summaryHtml = entry.summary?.$t ?? entry.content?.$t ?? "";
@@ -179,8 +179,10 @@ const LOGO_LINK = buildUtmUrl(
   UTM_MEDIUM,
   "weekly_digest_logo",
 );
+const BANNER_GIF_URL = `${SITE_URL}/newsletter/beyond-kvibe-banner.gif`;
+const BANNER_TARGET_URL = "https://www.franvia.com/p/franvia-hello.html";
 const BANNER_LINK = buildUtmUrl(
-  FRANVIA_HOME_URL,
+  BANNER_TARGET_URL,
   UTM_SOURCE,
   UTM_MEDIUM,
   "weekly_digest_banner",
@@ -339,7 +341,7 @@ function renderNewsletterHtml({
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:24px 0;">
     <tr>
       <td align="center">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
           <tr>
             <td style="background-color:#18181b;padding:24px 32px;">
               <a href="${LOGO_LINK}" style="text-decoration:none;">
@@ -349,14 +351,18 @@ function renderNewsletterHtml({
             </td>
           </tr>
           <tr>
-            <td style="background-color:#fbbf24;padding:10px 32px;text-align:center;">
-              <a href="${BANNER_LINK}" style="color:#18181b;text-decoration:none;font-weight:700;font-size:13px;">Explore more of Korea at Franvia &rarr;</a>
+            <td style="padding:24px 32px;text-align:center;">
+              <a href="${BANNER_LINK}" style="text-decoration:none;display:block;">
+                <img src="${BANNER_GIF_URL}" alt="FRANVIA - Beyond K-Vibe" style="width:100%;max-width:420px;height:auto;display:block;margin:0 auto;border:0;" />
+                <p style="margin:12px 0 16px;font-size:13px;color:#71717a;text-align:center;">From K-media and food to practical Korean used in daily life and K-Dramas.</p>
+                <span style="display:inline-block;background-color:#18181b;color:#ffffff;font-size:14px;font-weight:600;padding:10px 28px;border-radius:4px;max-width:100%;">Explore Franvia</span>
+              </a>
             </td>
           </tr>
           <tr>
             <td style="padding:32px;">
-              ${moviesSection}
               ${dramasSection}
+              ${moviesSection}
               ${postsSection}
             </td>
           </tr>
