@@ -257,6 +257,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
           url={`https://trend.franvia.com/movies/${slug}`}
           title={title}
           description={movie.overview ?? undefined}
+          imageUrl={movie.poster_url ?? undefined}
         />
       </div>
 

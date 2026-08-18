@@ -1,24 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Share2, Copy, Check } from "lucide-react";
+import { Share2, Copy, Check, Mail } from "lucide-react";
 
 interface ShareButtonsProps {
   url: string;
   title: string;
   description?: string;
-}
-
-declare global {
-  interface Window {
-    Kakao?: {
-      isInitialized: () => boolean;
-      init: (key: string) => void;
-      Share: {
-        sendDefault: (options: Record<string, unknown>) => void;
-      };
-    };
-  }
+  imageUrl?: string;
 }
 
 const ICON_SIZE = 20;
@@ -51,6 +40,7 @@ export default function ShareButtons({
   url,
   title,
   description,
+  imageUrl,
 }: ShareButtonsProps) {
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -81,28 +71,6 @@ export default function ShareButtons({
     }
   }
 
-  function handleKakaoShare() {
-    const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
-    if (!window.Kakao || !kakaoKey) return;
-
-    if (!window.Kakao.isInitialized()) {
-      window.Kakao.init(kakaoKey);
-    }
-
-    window.Kakao.Share.sendDefault({
-      objectType: "feed",
-      content: {
-        title,
-        description,
-        imageUrl: "",
-        link: {
-          mobileWebUrl: url,
-          webUrl: url,
-        },
-      },
-    });
-  }
-
   if (canNativeShare) {
     return (
       <button
@@ -117,7 +85,7 @@ export default function ShareButtons({
     );
   }
 
-  const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+  const mailtoHref = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${description ?? ""}\n\n${url}`)}`;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -131,26 +99,30 @@ export default function ShareButtons({
         label="Facebook에 공유하기"
         initial="f"
       />
-      {kakaoKey && (
-        <button
-          type="button"
-          onClick={handleKakaoShare}
-          aria-label="카카오톡으로 공유하기"
-          className={ICON_BUTTON_CLASS}
-        >
-          K
-        </button>
-      )}
       <BrandLinkButton
-        href={`https://line.me/R/msg/text/?${encodeURIComponent(`${title} ${url}`)}`}
-        label="LINE으로 공유하기"
-        initial="L"
+        href={`https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`}
+        label="Reddit에 공유하기"
+        initial="R"
       />
+      {imageUrl && (
+        <BrandLinkButton
+          href={`https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(title)}`}
+          label="Pinterest에 저장하기"
+          initial="P"
+        />
+      )}
       <BrandLinkButton
         href={`https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`}
         label="WhatsApp으로 공유하기"
         initial="W"
       />
+      <a
+        href={mailtoHref}
+        aria-label="이메일로 공유하기"
+        className={ICON_BUTTON_CLASS}
+      >
+        <Mail size={ICON_SIZE} />
+      </a>
       <button
         type="button"
         onClick={handleCopyLink}

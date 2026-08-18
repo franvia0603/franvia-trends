@@ -213,6 +213,7 @@ export default async function DramaPage({ params }: DramaPageProps) {
           url={`https://trend.franvia.com/dramas/${slug}`}
           title={title}
           description={drama.overview ?? undefined}
+          imageUrl={drama.poster_url ?? undefined}
         />
       </div>
 
