@@ -172,6 +172,19 @@ async function getFranviaPosts(): Promise<FranviaPost[]> {
 const THUMB_WIDTH = 48;
 const THUMB_HEIGHT = 64;
 const RANK_COLOR = "#b45309";
+const FRANVIA_HOME_URL = "https://www.franvia.com";
+const LOGO_LINK = buildUtmUrl(
+  FRANVIA_HOME_URL,
+  UTM_SOURCE,
+  UTM_MEDIUM,
+  "weekly_digest_logo",
+);
+const BANNER_LINK = buildUtmUrl(
+  FRANVIA_HOME_URL,
+  UTM_SOURCE,
+  UTM_MEDIUM,
+  "weekly_digest_banner",
+);
 
 // posterUrl이 없으면 같은 크기의 회색 박스로 대체해 레이아웃이 흔들리지 않게 한다.
 function posterCellHtml(posterUrl: string | null, alt: string): string {
@@ -191,29 +204,28 @@ function rankedRowHtml({
   rank: number;
   title: string;
   posterUrl: string | null;
-  link: string | null;
+  link: string;
   meta: string | null;
 }): string {
   const safeTitle = escapeHtml(title);
-  const titleHtml = link
-    ? `<a href="${link}" style="color:#18181b;text-decoration:none;font-weight:600;font-size:15px;">${safeTitle}</a>`
-    : `<span style="color:#18181b;font-weight:600;font-size:15px;">${safeTitle}</span>`;
 
   return `
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid #e4e4e7;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td width="${THUMB_WIDTH}" valign="middle" style="padding-right:12px;">
-              ${posterCellHtml(posterUrl, `${title} poster`)}
-            </td>
-            <td valign="middle">
-              <div style="color:${RANK_COLOR};font-weight:700;font-size:13px;">#${rank}</div>
-              <div>${titleHtml}</div>
-              ${meta ? `<div style="margin-top:2px;font-size:12px;color:#71717a;">${meta}</div>` : ""}
-            </td>
-          </tr>
-        </table>
+        <a href="${link}" style="display:block;text-decoration:none;color:inherit;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td width="${THUMB_WIDTH}" valign="middle" style="padding-right:12px;">
+                ${posterCellHtml(posterUrl, `${title} poster`)}
+              </td>
+              <td valign="middle">
+                <div style="color:${RANK_COLOR};font-weight:700;font-size:13px;">#${rank}</div>
+                <div style="color:#18181b;font-weight:600;font-size:15px;">${safeTitle}</div>
+                ${meta ? `<div style="margin-top:2px;font-size:12px;color:#71717a;">${meta}</div>` : ""}
+              </td>
+            </tr>
+          </table>
+        </a>
       </td>
     </tr>`;
 }
@@ -227,7 +239,7 @@ function movieRowHtml(movie: BoxOfficeRow): string {
         UTM_MEDIUM,
         UTM_CAMPAIGN,
       )
-    : null;
+    : buildUtmUrl(SITE_URL, UTM_SOURCE, UTM_MEDIUM, UTM_CAMPAIGN);
 
   return rankedRowHtml({
     rank: movie.rank,
@@ -247,7 +259,7 @@ function dramaRowHtml(drama: DramaRow): string {
         UTM_MEDIUM,
         UTM_CAMPAIGN,
       )
-    : null;
+    : buildUtmUrl(SITE_URL, UTM_SOURCE, UTM_MEDIUM, UTM_CAMPAIGN);
 
   return rankedRowHtml({
     rank: drama.rank,
@@ -263,17 +275,19 @@ function postBlockHtml(post: FranviaPost): string {
   const safeTitle = escapeHtml(post.title);
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
-      <tr>
-        <td width="${THUMB_WIDTH}" valign="middle" style="padding-right:12px;">
-          ${posterCellHtml(post.thumbnailUrl, `${post.title} thumbnail`)}
-        </td>
-        <td valign="middle">
-          <a href="${link}" style="font-weight:600;color:#18181b;text-decoration:none;font-size:15px;">${safeTitle}</a>
-          <p style="margin:4px 0 0;font-size:13px;line-height:1.5;color:#52525b;">${post.summary}</p>
-        </td>
-      </tr>
-    </table>`;
+    <a href="${link}" style="display:block;text-decoration:none;color:inherit;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+        <tr>
+          <td width="${THUMB_WIDTH}" valign="middle" style="padding-right:12px;">
+            ${posterCellHtml(post.thumbnailUrl, `${post.title} thumbnail`)}
+          </td>
+          <td valign="middle">
+            <div style="font-weight:600;color:#18181b;font-size:15px;">${safeTitle}</div>
+            <p style="margin:4px 0 0;font-size:13px;line-height:1.5;color:#52525b;">${post.summary}</p>
+          </td>
+        </tr>
+      </table>
+    </a>`;
 }
 
 function renderNewsletterHtml({
@@ -328,8 +342,15 @@ function renderNewsletterHtml({
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;">
           <tr>
             <td style="background-color:#18181b;padding:24px 32px;">
-              <span style="color:#fbbf24;font-size:22px;font-weight:800;letter-spacing:0.05em;">FRANVIA</span>
+              <a href="${LOGO_LINK}" style="text-decoration:none;">
+                <span style="color:#fbbf24;font-size:22px;font-weight:800;letter-spacing:0.05em;">FRANVIA</span>
+              </a>
               <span style="color:#ffffff;font-size:15px;font-weight:300;margin-left:8px;">K-TREND WEEKLY</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#fbbf24;padding:10px 32px;text-align:center;">
+              <a href="${BANNER_LINK}" style="color:#18181b;text-decoration:none;font-weight:700;font-size:13px;">Explore more of Korea at Franvia &rarr;</a>
             </td>
           </tr>
           <tr>
