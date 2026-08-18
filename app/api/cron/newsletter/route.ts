@@ -19,6 +19,7 @@ interface BoxOfficeRow {
   movie_name: string;
   en_title: string | null;
   slug: string | null;
+  poster_url: string | null;
   audience_acc: number;
 }
 
@@ -27,12 +28,14 @@ interface DramaRow {
   title: string;
   en_title: string | null;
   slug: string | null;
+  poster_url: string | null;
 }
 
 interface FranviaPost {
   title: string;
   url: string;
   summary: string;
+  thumbnailUrl: string | null;
 }
 
 function decodeEntities(text: string): string {
@@ -43,6 +46,15 @@ function decodeEntities(text: string): string {
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&");
+}
+
+// href/alt 같은 HTML 속성 안에 그대로 꽂히는 텍스트(제목 등)를 이스케이프한다.
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function stripHtmlAndTruncate(html: string, maxLength = 140): string {
@@ -82,7 +94,7 @@ async function getTopBoxOffice(supabase: SupabaseClient): Promise<BoxOfficeRow[]
 
   const { data, error } = await supabase
     .from("boxoffice")
-    .select("rank, movie_name, en_title, slug, audience_acc")
+    .select("rank, movie_name, en_title, slug, poster_url, audience_acc")
     .eq("rank_date", latest.rank_date)
     .lte("rank", 5)
     .order("rank", { ascending: true });
@@ -103,7 +115,7 @@ async function getTopDramas(supabase: SupabaseClient): Promise<DramaRow[]> {
 
   const { data, error } = await supabase
     .from("dramas")
-    .select("rank, title, en_title, slug")
+    .select("rank, title, en_title, slug, poster_url")
     .eq("rank_date", latest.rank_date)
     .lte("rank", 5)
     .order("rank", { ascending: true });
@@ -122,6 +134,7 @@ interface BloggerFeedEntry {
   summary?: { $t?: string };
   content?: { $t?: string };
   link?: BloggerFeedLink[];
+  "media$thumbnail"?: { url?: string };
 }
 
 // Franvia 피드 fetch/파싱 실패는 뉴스레터 전체를 막지 않고, 빈 배열로
@@ -146,6 +159,7 @@ async function getFranviaPosts(): Promise<FranviaPost[]> {
           title: entry.title?.$t ? decodeEntities(entry.title.$t) : "",
           url: altLink?.href ?? "",
           summary: stripHtmlAndTruncate(summaryHtml),
+          thumbnailUrl: entry["media$thumbnail"]?.url ?? null,
         };
       })
       .filter((post) => post.title && post.url);
@@ -153,6 +167,55 @@ async function getFranviaPosts(): Promise<FranviaPost[]> {
     console.error("Failed to fetch/parse Franvia feed:", err);
     return [];
   }
+}
+
+const THUMB_WIDTH = 48;
+const THUMB_HEIGHT = 64;
+const RANK_COLOR = "#b45309";
+
+// posterUrl이 없으면 같은 크기의 회색 박스로 대체해 레이아웃이 흔들리지 않게 한다.
+function posterCellHtml(posterUrl: string | null, alt: string): string {
+  if (posterUrl) {
+    return `<img src="${posterUrl}" width="${THUMB_WIDTH}" height="${THUMB_HEIGHT}" style="object-fit:cover;border-radius:4px;display:block;" alt="${escapeHtml(alt)}" />`;
+  }
+  return `<div style="width:${THUMB_WIDTH}px;height:${THUMB_HEIGHT}px;background-color:#e4e4e7;border-radius:4px;"></div>`;
+}
+
+function rankedRowHtml({
+  rank,
+  title,
+  posterUrl,
+  link,
+  meta,
+}: {
+  rank: number;
+  title: string;
+  posterUrl: string | null;
+  link: string | null;
+  meta: string | null;
+}): string {
+  const safeTitle = escapeHtml(title);
+  const titleHtml = link
+    ? `<a href="${link}" style="color:#18181b;text-decoration:none;font-weight:600;font-size:15px;">${safeTitle}</a>`
+    : `<span style="color:#18181b;font-weight:600;font-size:15px;">${safeTitle}</span>`;
+
+  return `
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid #e4e4e7;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td width="${THUMB_WIDTH}" valign="middle" style="padding-right:12px;">
+              ${posterCellHtml(posterUrl, `${title} poster`)}
+            </td>
+            <td valign="middle">
+              <div style="color:${RANK_COLOR};font-weight:700;font-size:13px;">#${rank}</div>
+              <div>${titleHtml}</div>
+              ${meta ? `<div style="margin-top:2px;font-size:12px;color:#71717a;">${meta}</div>` : ""}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>`;
 }
 
 function movieRowHtml(movie: BoxOfficeRow): string {
@@ -166,18 +229,13 @@ function movieRowHtml(movie: BoxOfficeRow): string {
       )
     : null;
 
-  const titleHtml = link
-    ? `<a href="${link}" style="color:#18181b;text-decoration:none;font-weight:600;">${title}</a>`
-    : `<span style="color:#18181b;font-weight:600;">${title}</span>`;
-
-  return `
-    <tr>
-      <td style="padding:10px 0;border-bottom:1px solid #e4e4e7;">
-        <span style="display:inline-block;width:22px;font-weight:700;color:#fbbf24;font-size:14px;">#${movie.rank}</span>
-        ${titleHtml}
-        <div style="margin-top:2px;margin-left:22px;font-size:12px;color:#71717a;">Cumulative admissions: ${movie.audience_acc.toLocaleString("en-US")}</div>
-      </td>
-    </tr>`;
+  return rankedRowHtml({
+    rank: movie.rank,
+    title,
+    posterUrl: movie.poster_url,
+    link,
+    meta: `Cumulative admissions: ${movie.audience_acc.toLocaleString("en-US")}`,
+  });
 }
 
 function dramaRowHtml(drama: DramaRow): string {
@@ -191,26 +249,31 @@ function dramaRowHtml(drama: DramaRow): string {
       )
     : null;
 
-  const titleHtml = link
-    ? `<a href="${link}" style="color:#18181b;text-decoration:none;font-weight:600;">${title}</a>`
-    : `<span style="color:#18181b;font-weight:600;">${title}</span>`;
-
-  return `
-    <tr>
-      <td style="padding:10px 0;border-bottom:1px solid #e4e4e7;">
-        <span style="display:inline-block;width:22px;font-weight:700;color:#fbbf24;font-size:14px;">#${drama.rank}</span>
-        ${titleHtml}
-      </td>
-    </tr>`;
+  return rankedRowHtml({
+    rank: drama.rank,
+    title,
+    posterUrl: drama.poster_url,
+    link,
+    meta: null,
+  });
 }
 
 function postBlockHtml(post: FranviaPost): string {
   const link = buildUtmUrl(post.url, UTM_SOURCE, UTM_MEDIUM, UTM_CAMPAIGN);
+  const safeTitle = escapeHtml(post.title);
+
   return `
-    <div style="margin-bottom:16px;">
-      <a href="${link}" style="font-weight:600;color:#18181b;text-decoration:none;font-size:15px;">${post.title}</a>
-      <p style="margin:4px 0 0;font-size:13px;line-height:1.5;color:#52525b;">${post.summary}</p>
-    </div>`;
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+      <tr>
+        <td width="${THUMB_WIDTH}" valign="middle" style="padding-right:12px;">
+          ${posterCellHtml(post.thumbnailUrl, `${post.title} thumbnail`)}
+        </td>
+        <td valign="middle">
+          <a href="${link}" style="font-weight:600;color:#18181b;text-decoration:none;font-size:15px;">${safeTitle}</a>
+          <p style="margin:4px 0 0;font-size:13px;line-height:1.5;color:#52525b;">${post.summary}</p>
+        </td>
+      </tr>
+    </table>`;
 }
 
 function renderNewsletterHtml({
