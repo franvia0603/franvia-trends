@@ -50,7 +50,7 @@ export default function FranviaBanner() {
 
   return (
     <a
-      href="https://www.franvia.com"
+      href="https://www.franvia.com?utm_source=trend_franvia&utm_medium=banner&utm_campaign=cross_promo"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Read Franvia — explore the Franvia K-Culture magazine"

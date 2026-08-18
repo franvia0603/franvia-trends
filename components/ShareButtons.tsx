@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Share2, Copy, Check, Mail } from "lucide-react";
 import { SiX, SiFacebook, SiReddit, SiPinterest, SiWhatsapp } from "react-icons/si";
 import type { IconType } from "react-icons";
+import { buildUtmUrl } from "@/lib/utm";
 
 interface ShareButtonsProps {
   url: string;
@@ -87,34 +88,36 @@ export default function ShareButtons({
     );
   }
 
-  const mailtoHref = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${description ?? ""}\n\n${url}`)}`;
+  const utmUrl = (source: string) => buildUtmUrl(url, source, "social", "share_button");
+
+  const mailtoHref = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${description ?? ""}\n\n${utmUrl("email")}`)}`;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
       <BrandLinkButton
-        href={`https://x.com/intent/post?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`}
+        href={`https://x.com/intent/post?text=${encodeURIComponent(title)}&url=${encodeURIComponent(utmUrl("x"))}`}
         label="X(트위터)에 공유하기"
         Icon={SiX}
       />
       <BrandLinkButton
-        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`}
+        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(utmUrl("facebook"))}`}
         label="Facebook에 공유하기"
         Icon={SiFacebook}
       />
       <BrandLinkButton
-        href={`https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`}
+        href={`https://www.reddit.com/submit?url=${encodeURIComponent(utmUrl("reddit"))}&title=${encodeURIComponent(title)}`}
         label="Reddit에 공유하기"
         Icon={SiReddit}
       />
       {imageUrl && (
         <BrandLinkButton
-          href={`https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(title)}`}
+          href={`https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(utmUrl("pinterest"))}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(title)}`}
           label="Pinterest에 저장하기"
           Icon={SiPinterest}
         />
       )}
       <BrandLinkButton
-        href={`https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`}
+        href={`https://wa.me/?text=${encodeURIComponent(`${title} ${utmUrl("whatsapp")}`)}`}
         label="WhatsApp으로 공유하기"
         Icon={SiWhatsapp}
       />

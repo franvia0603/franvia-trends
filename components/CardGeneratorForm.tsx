@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, Loader2, Copy, Check } from "lucide-react";
 import { downloadCardImage } from "@/lib/my-pick-card";
+import { buildUtmUrl } from "@/lib/utm";
 
 type SiteLabel = "franvia.com" | "trend.franvia.com";
 type Platform = "Instagram" | "Pinterest" | "Facebook";
@@ -58,12 +59,7 @@ function buildCardUrl(values: FormValues): string {
 }
 
 function buildShareUrl(articleUrl: string, platform: Platform): string {
-  const trimmed = articleUrl.trim();
-  if (!trimmed) return "";
-
-  const separator = trimmed.includes("?") ? "&" : "?";
-  const utmSource = platform.toLowerCase();
-  return `${trimmed}${separator}utm_source=${utmSource}&utm_medium=manual&utm_campaign=my_pick_card`;
+  return buildUtmUrl(articleUrl, platform.toLowerCase(), "manual", "my_pick_card");
 }
 
 function CopyButton({ value }: { value: string }) {
@@ -99,6 +95,7 @@ export default function CardGeneratorForm() {
   const [imageReady, setImageReady] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [captionLoading, setCaptionLoading] = useState(false);
 
   const hasRequiredFields = values.title.trim() !== "" && values.imageUrl.trim() !== "";
   const previewReady =
@@ -115,6 +112,47 @@ export default function CardGeneratorForm() {
     }, 400);
     return () => clearTimeout(timer);
   }, [values]);
+
+  // articleUrl 입력이 잠시 멈추면 franvia.com 계열 페이지의 메타
+  // 디스크립션을 가져와 caption을 자동으로 채운다. caption을 이미
+  // 직접 입력한 경우에는 덮어쓰지 않는다.
+  useEffect(() => {
+    const articleUrl = values.articleUrl.trim();
+    if (!articleUrl) {
+      const reset = () => setCaptionLoading(false);
+      reset();
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      setCaptionLoading(true);
+      try {
+        const res = await fetch(
+          `/api/extract-description?url=${encodeURIComponent(articleUrl)}`,
+        );
+        const data: { description?: string | null } = await res.json();
+        if (!cancelled && data.description) {
+          setValues((prev) =>
+            prev.caption.trim() === ""
+              ? { ...prev, caption: data.description as string }
+              : prev,
+          );
+        }
+      } catch {
+        // franvia.com 계열이 아니거나 fetch 실패 시 조용히 무시하고
+        // 사용자가 caption을 직접 입력하도록 둔다.
+      } finally {
+        if (!cancelled) setCaptionLoading(false);
+      }
+    }, 800);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [values.articleUrl]);
 
   function updateField<K extends keyof FormValues>(key: K, value: FormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -247,6 +285,12 @@ export default function CardGeneratorForm() {
             rows={4}
             className={`${INPUT_CLASS} resize-none`}
           />
+          {captionLoading && (
+            <span className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500">
+              <Loader2 className="animate-spin" size={12} />
+              설명 가져오는 중...
+            </span>
+          )}
         </label>
 
         {!hasRequiredFields && (
