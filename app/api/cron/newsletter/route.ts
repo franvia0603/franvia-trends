@@ -172,9 +172,8 @@ async function getFranviaPosts(): Promise<FranviaPost[]> {
 const THUMB_WIDTH = 48;
 const THUMB_HEIGHT = 64;
 const RANK_COLOR = "#b45309";
-const FRANVIA_HOME_URL = "https://www.franvia.com";
 const LOGO_LINK = buildUtmUrl(
-  FRANVIA_HOME_URL,
+  SITE_URL,
   UTM_SOURCE,
   UTM_MEDIUM,
   "weekly_digest_logo",
@@ -346,8 +345,8 @@ function renderNewsletterHtml({
             <td style="background-color:#18181b;padding:24px 32px;">
               <a href="${LOGO_LINK}" style="text-decoration:none;">
                 <span style="color:#fbbf24;font-size:22px;font-weight:800;letter-spacing:0.05em;">FRANVIA</span>
+                <span style="color:#ffffff;font-size:18px;font-weight:700;margin-left:8px;">K-Trend Chart</span>
               </a>
-              <span style="color:#ffffff;font-size:15px;font-weight:300;margin-left:8px;">K-TREND WEEKLY</span>
             </td>
           </tr>
           <tr>
