@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ShareButtons from "@/components/ShareButtons";
+import BookmarkButton from "@/components/BookmarkButton";
 
 interface DramaPageProps {
   params: Promise<{ slug: string }>;
@@ -208,12 +209,18 @@ export default async function DramaPage({ params }: DramaPageProps) {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-4">
         <ShareButtons
           url={`https://trend.franvia.com/dramas/${slug}`}
           title={title}
           description={drama.overview ?? undefined}
           imageUrl={drama.poster_url ?? undefined}
+        />
+        <BookmarkButton
+          slug={slug}
+          contentType="drama"
+          title={title}
+          posterUrl={drama.poster_url ?? undefined}
         />
       </div>
 

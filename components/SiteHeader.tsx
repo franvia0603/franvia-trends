@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Heart } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
+import { useWatchlist } from "@/lib/watchlist-context";
 
 const SECTION_IDS = ["movies", "k-drama"] as const;
 type SectionId = (typeof SECTION_IDS)[number];
@@ -40,9 +43,41 @@ function mobileNavLinkClass(active: boolean): string {
   return active ? `${base} text-amber-400` : `${base} text-zinc-300`;
 }
 
+function CountBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-zinc-900">
+      {count}
+    </span>
+  );
+}
+
+function WatchlistNavLink({
+  count,
+  onClick,
+  className = "",
+}: {
+  count: number;
+  onClick?: () => void;
+  className?: string;
+}) {
+  return (
+    <Link
+      href="/watchlist"
+      onClick={onClick}
+      className={`flex items-center gap-1.5 text-sm font-semibold text-zinc-300 transition-colors hover:text-amber-400 ${className}`}
+    >
+      <Heart size={16} />
+      Watchlist
+      <CountBadge count={count} />
+    </Link>
+  );
+}
+
 export default function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId>("movies");
+  const { count } = useWatchlist();
 
   useEffect(() => {
     const elements = SECTION_IDS.map((id) => document.getElementById(id)).filter(
@@ -106,6 +141,7 @@ export default function SiteHeader() {
             K-pop
             <ComingSoonBadge />
           </span>
+          <WatchlistNavLink count={count} />
         </nav>
 
         <SearchBar compact className="hidden md:block md:w-44 lg:w-56" />
@@ -159,6 +195,10 @@ export default function SiteHeader() {
               K-pop
               <ComingSoonBadge />
             </span>
+            <WatchlistNavLink
+              count={count}
+              onClick={() => setIsMenuOpen(false)}
+            />
             <SearchBar compact />
             <VisitFranviaButton className="text-center" />
           </nav>

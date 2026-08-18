@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ShareButtons from "@/components/ShareButtons";
+import BookmarkButton from "@/components/BookmarkButton";
 
 interface MoviePageProps {
   params: Promise<{ slug: string }>;
@@ -252,12 +253,18 @@ export default async function MoviePage({ params }: MoviePageProps) {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-4">
         <ShareButtons
           url={`https://trend.franvia.com/movies/${slug}`}
           title={title}
           description={movie.overview ?? undefined}
           imageUrl={movie.poster_url ?? undefined}
+        />
+        <BookmarkButton
+          slug={slug}
+          contentType="movie"
+          title={title}
+          posterUrl={movie.poster_url ?? undefined}
         />
       </div>
 

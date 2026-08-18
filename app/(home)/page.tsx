@@ -8,6 +8,7 @@ import LiveClock from "@/components/LiveClock";
 import FranviaBanner from "@/components/FranviaBanner";
 import EditorCommentary from "@/components/EditorCommentary";
 import FranviaEditorial from "@/components/FranviaEditorial";
+import BookmarkButton from "@/components/BookmarkButton";
 
 export const revalidate = 3600;
 
@@ -218,6 +219,16 @@ function DramaRankingSection({ dramas }: { dramas: DramaRow[] }) {
                   </span>
                 ) : null}
               </div>
+              {drama.slug && (
+                <BookmarkButton
+                  slug={drama.slug}
+                  contentType="drama"
+                  title={drama.en_title || drama.title}
+                  posterUrl={drama.poster_url ?? undefined}
+                  size={18}
+                  className="shrink-0"
+                />
+              )}
             </>
           );
 
@@ -342,6 +353,16 @@ export default async function Home() {
                       {movie.audience_count.toLocaleString("en-US")}
                     </span>
                   </div>
+                  {movie.slug && (
+                    <BookmarkButton
+                      slug={movie.slug}
+                      contentType="movie"
+                      title={movie.en_title || movie.movie_name}
+                      posterUrl={movie.poster_url ?? undefined}
+                      size={18}
+                      className="shrink-0"
+                    />
+                  )}
                 </>
               );
 
