@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Share2, Copy, Check, Mail } from "lucide-react";
+import { SiX, SiFacebook, SiReddit, SiPinterest, SiWhatsapp } from "react-icons/si";
+import type { IconType } from "react-icons";
 
 interface ShareButtonsProps {
   url: string;
@@ -17,11 +19,11 @@ const ICON_BUTTON_CLASS =
 function BrandLinkButton({
   href,
   label,
-  initial,
+  Icon,
 }: {
   href: string;
   label: string;
-  initial: string;
+  Icon: IconType;
 }) {
   return (
     <a
@@ -29,9 +31,9 @@ function BrandLinkButton({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className={ICON_BUTTON_CLASS}
+      className="flex h-10 w-10 items-center justify-center text-amber-400 transition-opacity hover:opacity-75"
     >
-      {initial}
+      <Icon size={ICON_SIZE} />
     </a>
   );
 }
@@ -92,29 +94,29 @@ export default function ShareButtons({
       <BrandLinkButton
         href={`https://x.com/intent/post?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`}
         label="X(트위터)에 공유하기"
-        initial="X"
+        Icon={SiX}
       />
       <BrandLinkButton
         href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`}
         label="Facebook에 공유하기"
-        initial="f"
+        Icon={SiFacebook}
       />
       <BrandLinkButton
         href={`https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`}
         label="Reddit에 공유하기"
-        initial="R"
+        Icon={SiReddit}
       />
       {imageUrl && (
         <BrandLinkButton
           href={`https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(title)}`}
           label="Pinterest에 저장하기"
-          initial="P"
+          Icon={SiPinterest}
         />
       )}
       <BrandLinkButton
         href={`https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`}
         label="WhatsApp으로 공유하기"
-        initial="W"
+        Icon={SiWhatsapp}
       />
       <a
         href={mailtoHref}
