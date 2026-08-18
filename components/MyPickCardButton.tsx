@@ -78,7 +78,7 @@ export default function MyPickCardButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="My Pick 카드 만들기"
+        aria-label="Create My Pick card"
         className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-400 hover:text-zinc-900"
       >
         <Sparkles size={18} />
@@ -109,7 +109,7 @@ export default function MyPickCardButton({
             <Loader2
               className="animate-spin text-amber-400"
               size={28}
-              aria-label="카드 생성 중"
+              aria-label="Generating card"
             />
           </div>
         )}
@@ -120,7 +120,7 @@ export default function MyPickCardButton({
           type="button"
           onClick={handleDownload}
           disabled={downloading}
-          aria-label="My Pick 카드 다운로드"
+          aria-label="Download My Pick card"
           className={BUTTON_CLASS}
         >
           {downloading ? (
@@ -134,7 +134,7 @@ export default function MyPickCardButton({
           type="button"
           onClick={handleShare}
           disabled={sharing}
-          aria-label="My Pick 카드 공유"
+          aria-label="Share My Pick card"
           className={BUTTON_CLASS}
         >
           {sharing ? (

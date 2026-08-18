@@ -80,11 +80,11 @@ function CopyButton({ value }: { value: string }) {
       type="button"
       onClick={handleCopy}
       disabled={!value}
-      aria-label="복사"
+      aria-label="Copy"
       className={COPY_BUTTON_CLASS}
     >
       {copied ? <Check size={14} /> : <Copy size={14} />}
-      {copied ? "복사됨" : "복사"}
+      {copied ? "Copied" : "Copy"}
     </button>
   );
 }
@@ -281,21 +281,21 @@ export default function CardGeneratorForm() {
           <textarea
             value={values.caption}
             onChange={(e) => updateField("caption", e.target.value)}
-            placeholder="게시물에 쓸 캡션을 입력하세요"
+            placeholder="Enter the caption for your post"
             rows={4}
             className={`${INPUT_CLASS} resize-none`}
           />
           {captionLoading && (
             <span className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500">
               <Loader2 className="animate-spin" size={12} />
-              설명 가져오는 중...
+              Fetching description...
             </span>
           )}
         </label>
 
         {!hasRequiredFields && (
           <p className="text-sm text-zinc-500">
-            Title과 Image URL을 입력하면 미리보기와 다운로드가 활성화됩니다.
+            Enter a Title and Image URL to enable preview and download.
           </p>
         )}
       </div>
@@ -324,14 +324,14 @@ export default function CardGeneratorForm() {
                   <Loader2
                     className="animate-spin text-amber-400"
                     size={28}
-                    aria-label="카드 생성 중"
+                    aria-label="Generating card"
                   />
                 </div>
               )}
             </>
           ) : (
             <div className="flex h-full w-full items-center justify-center px-6 text-center text-sm text-zinc-500">
-              Title과 Image URL을 입력하면 여기에 미리보기가 표시됩니다.
+              Enter a Title and Image URL to see the preview here.
             </div>
           )}
         </div>
@@ -340,7 +340,7 @@ export default function CardGeneratorForm() {
           type="button"
           onClick={handleDownload}
           disabled={!previewReady || downloading}
-          aria-label="카드 다운로드"
+          aria-label="Download card"
           className="mt-4 inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {downloading ? (
@@ -352,7 +352,7 @@ export default function CardGeneratorForm() {
         </button>
 
         <div className="mt-8 w-full">
-          <p className="text-sm font-medium text-zinc-300">공유용 URL</p>
+          <p className="text-sm font-medium text-zinc-300">Share URL</p>
           {shareUrl ? (
             <div className="mt-1 flex items-center gap-2">
               <input
@@ -365,14 +365,14 @@ export default function CardGeneratorForm() {
             </div>
           ) : (
             <p className="mt-1 text-sm text-zinc-500">
-              Article URL을 입력하면 UTM 파라미터가 포함된 공유용 URL이
-              여기에 표시됩니다.
+              Enter an Article URL to generate a share link with UTM
+              parameters here.
             </p>
           )}
         </div>
 
         <div className="mt-6 w-full">
-          <p className="text-sm font-medium text-zinc-300">캡션</p>
+          <p className="text-sm font-medium text-zinc-300">Caption</p>
           {values.caption ? (
             <div className="mt-1 flex items-start gap-2">
               <textarea
@@ -385,7 +385,7 @@ export default function CardGeneratorForm() {
             </div>
           ) : (
             <p className="mt-1 text-sm text-zinc-500">
-              Caption을 입력하면 여기에 표시됩니다.
+              Enter a caption to see it here.
             </p>
           )}
         </div>

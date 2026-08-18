@@ -36,7 +36,7 @@ export default function BookmarkButton({
     <button
       type="button"
       onClick={handleClick}
-      aria-label={saved ? "워치리스트에서 제거" : "워치리스트에 담기"}
+      aria-label={saved ? "Remove from watchlist" : "Add to watchlist"}
       aria-pressed={saved}
       className={`inline-flex items-center justify-center text-amber-400 transition-all duration-150 hover:scale-110 hover:text-red-500 active:scale-125 ${className}`}
     >

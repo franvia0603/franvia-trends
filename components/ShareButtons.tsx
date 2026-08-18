@@ -79,11 +79,11 @@ export default function ShareButtons({
       <button
         type="button"
         onClick={handleNativeShare}
-        aria-label="공유하기"
+        aria-label="Share"
         className="flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-400 hover:text-zinc-900"
       >
         <Share2 size={ICON_SIZE} />
-        공유하기
+        Share
       </button>
     );
   }
@@ -96,34 +96,34 @@ export default function ShareButtons({
     <div className="flex flex-wrap items-center gap-3">
       <BrandLinkButton
         href={`https://x.com/intent/post?text=${encodeURIComponent(title)}&url=${encodeURIComponent(utmUrl("x"))}`}
-        label="X(트위터)에 공유하기"
+        label="Share on X"
         Icon={SiX}
       />
       <BrandLinkButton
         href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(utmUrl("facebook"))}`}
-        label="Facebook에 공유하기"
+        label="Share on Facebook"
         Icon={SiFacebook}
       />
       <BrandLinkButton
         href={`https://www.reddit.com/submit?url=${encodeURIComponent(utmUrl("reddit"))}&title=${encodeURIComponent(title)}`}
-        label="Reddit에 공유하기"
+        label="Share on Reddit"
         Icon={SiReddit}
       />
       {imageUrl && (
         <BrandLinkButton
           href={`https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(utmUrl("pinterest"))}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(title)}`}
-          label="Pinterest에 저장하기"
+          label="Save to Pinterest"
           Icon={SiPinterest}
         />
       )}
       <BrandLinkButton
         href={`https://wa.me/?text=${encodeURIComponent(`${title} ${utmUrl("whatsapp")}`)}`}
-        label="WhatsApp으로 공유하기"
+        label="Share on WhatsApp"
         Icon={SiWhatsapp}
       />
       <a
         href={mailtoHref}
-        aria-label="이메일로 공유하기"
+        aria-label="Share via email"
         className={ICON_BUTTON_CLASS}
       >
         <Mail size={ICON_SIZE} />
@@ -131,7 +131,7 @@ export default function ShareButtons({
       <button
         type="button"
         onClick={handleCopyLink}
-        aria-label={copied ? "링크가 복사됨" : "링크 복사"}
+        aria-label={copied ? "Link copied" : "Copy link"}
         className={ICON_BUTTON_CLASS}
       >
         {copied ? <Check size={ICON_SIZE} /> : <Copy size={ICON_SIZE} />}

@@ -47,8 +47,8 @@ export default function WatchlistPage() {
             <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-800/50 px-6 py-16 text-center">
               <Heart className="mx-auto text-zinc-600" size={40} />
               <p className="mt-4 text-zinc-300">
-                아직 담은 작품이 없습니다. 랭킹에서 마음에 드는 작품을
-                담아보세요.
+                You haven&apos;t saved anything yet. Browse the rankings and
+                save titles you like.
               </p>
               <Link
                 href="/"
@@ -93,7 +93,7 @@ export default function WatchlistPage() {
                   <button
                     type="button"
                     onClick={() => remove(item.slug, item.contentType)}
-                    aria-label={`${item.title} 워치리스트에서 제거`}
+                    aria-label={`Remove ${item.title} from watchlist`}
                     className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900/80 text-white transition-colors hover:bg-red-500"
                   >
                     <X size={14} />
