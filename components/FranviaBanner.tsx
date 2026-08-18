@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Playfair_Display } from "next/font/google";
 import { ArrowRight } from "lucide-react";
+
+// 이 배너에만 쓰는 헤드카피 폰트라, 전역 폰트(app/layout.tsx의 Geist)와
+// 별개로 컴포넌트 범위에서 직접 로드한다.
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-playfair",
+});
 
 const TYPED_TEXT = "the real Korea, told from Korea.";
 
@@ -52,10 +61,14 @@ export default function FranviaBanner() {
           <span className="mb-1.5 block text-[10px] font-bold tracking-[0.12em] text-amber-400">
             FRANVIA · BEYOND K-VIBE
           </span>
-          <p className="m-0 font-serif text-[17px] leading-[1.5] text-white max-[420px]:text-sm">
+          <p
+            className={`${playfair.className} m-0 text-[17px] font-medium leading-[1.5] text-white max-[420px]:text-sm`}
+          >
             From K-media and food to Hangeul and daily life —
           </p>
-          <p className="m-0 min-h-[26px] font-serif text-[17px] leading-[1.5] text-amber-400 max-[420px]:text-sm">
+          <p
+            className={`${playfair.className} m-0 min-h-[26px] text-[17px] font-medium leading-[1.5] text-amber-400 max-[420px]:text-sm`}
+          >
             {typed}
             <span className="ml-0.5 inline-block h-4 w-[2px] animate-cta-cursor bg-amber-400 align-[-3px]" />
           </p>
