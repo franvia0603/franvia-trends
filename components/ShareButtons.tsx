@@ -15,7 +15,7 @@ interface ShareButtonsProps {
 
 const ICON_SIZE = 20;
 const ICON_BUTTON_CLASS =
-  "flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-sm font-bold text-white transition-colors hover:bg-amber-400 hover:text-zinc-900";
+  "flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-sm font-bold text-white transition-colors duration-150 hover:text-red-500";
 
 function BrandLinkButton({
   href,
@@ -32,7 +32,7 @@ function BrandLinkButton({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="flex h-10 w-10 items-center justify-center text-amber-400 transition-opacity hover:opacity-75"
+      className="flex h-10 w-10 items-center justify-center text-amber-400 transition-colors duration-150 hover:text-red-500"
     >
       <Icon size={ICON_SIZE} />
     </a>
