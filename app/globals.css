@@ -10,6 +10,28 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --animate-cta-blink: cta-blink 1.3s ease-in-out infinite;
+  --animate-cta-cursor: cta-cursor-blink 1s step-end infinite;
+}
+
+@keyframes cta-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes cta-cursor-blink {
+  from,
+  to {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

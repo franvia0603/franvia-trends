@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import TopTicker from "@/components/TopTicker";
 import LiveClock from "@/components/LiveClock";
+import FranviaBanner from "@/components/FranviaBanner";
 import EditorCommentary from "@/components/EditorCommentary";
 import FranviaEditorial from "@/components/FranviaEditorial";
 
@@ -266,6 +267,9 @@ export default async function Home() {
         <LiveClock />
         <TopTicker movies={tickerMovies} dramas={tickerDramas} />
         <main className="flex flex-col">
+          <div className="mx-auto w-full max-w-3xl px-6 pt-6">
+            <FranviaBanner />
+          </div>
           <EditorCommentary />
           <article id="movies" className="mx-auto w-full max-w-3xl scroll-mt-24 px-6 py-16">
             <h1 className="text-2xl font-bold text-zinc-900">
@@ -298,6 +302,9 @@ export default async function Home() {
       <LiveClock />
       <TopTicker movies={tickerMovies} dramas={tickerDramas} />
       <main className="flex flex-col">
+        <div className="mx-auto w-full max-w-3xl px-6 pt-6">
+          <FranviaBanner />
+        </div>
         <EditorCommentary />
         <article id="movies" className="mx-auto w-full max-w-3xl scroll-mt-24 px-6 py-16">
           <header className="mb-8">
