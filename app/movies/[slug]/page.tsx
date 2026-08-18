@@ -4,6 +4,8 @@ import Link from "next/link";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import ShareButtons from "@/components/ShareButtons";
 import BookmarkButton from "@/components/BookmarkButton";
 import MyPickCardButton from "@/components/MyPickCardButton";
@@ -195,7 +197,9 @@ export default async function MoviePage({ params }: MoviePageProps) {
     : `As of today, ${title} has drawn ${formattedAudienceAcc} admissions.`;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-6 py-16">
+    <>
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-3xl px-6 py-16">
       <Link
         href="/"
         className="text-sm font-medium text-zinc-500 transition-colors hover:text-amber-500"
@@ -410,6 +414,8 @@ export default async function MoviePage({ params }: MoviePageProps) {
         Box office data sourced from KOBIS (Korean Box office Information
         System), operated by the Korean Film Council (KOFIC).
       </p>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

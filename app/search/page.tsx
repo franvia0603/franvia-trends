@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import SearchBar from "@/components/SearchBar";
 
 interface SearchPageProps {
@@ -253,7 +255,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const hasResults = movies.length > 0 || dramas.length > 0;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-6 py-16">
+    <>
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-3xl px-6 py-16">
       <SearchBar className="max-w-md" />
 
       {query && (
@@ -277,7 +281,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       <ResultGrid heading="Movies" items={movies} basePath="movies" />
       <ResultGrid heading="K-Drama" items={dramas} basePath="dramas" />
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
 

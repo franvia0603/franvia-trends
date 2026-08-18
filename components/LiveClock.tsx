@@ -44,7 +44,7 @@ export default function LiveClock() {
   }, []);
 
   return (
-    <div className="sticky top-0 z-[60] bg-zinc-800">
+    <div className="sticky top-0 z-[60] bg-zinc-700">
       <div className="mx-auto max-w-5xl px-6 py-1.5 text-left text-xs text-zinc-400">
         🕐 Seoul, Korea · {parts ? `${parts.date} · ` : ""}
         <span className="font-semibold text-amber-400">
