@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import ShareButtons from "@/components/ShareButtons";
 
 interface DramaPageProps {
   params: Promise<{ slug: string }>;
@@ -205,6 +206,14 @@ export default async function DramaPage({ params }: DramaPageProps) {
             </div>
           </dl>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <ShareButtons
+          url={`https://trend.franvia.com/dramas/${slug}`}
+          title={title}
+          description={drama.overview ?? undefined}
+        />
       </div>
 
       {drama.trailer_key && (
