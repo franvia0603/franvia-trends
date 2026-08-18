@@ -37,6 +37,13 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },
+  alternates: {
+    types: {
+      "application/rss+xml": [
+        { title: SITE_NAME, url: "https://trend.franvia.com/feed.xml" },
+      ],
+    },
+  },
   verification: {
     other: {
       "naver-site-verification": "044bf01f28f411f022f107b2695d50bfad9331eb",
