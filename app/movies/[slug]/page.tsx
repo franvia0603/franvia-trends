@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import Script from "next/script";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ShareButtons from "@/components/ShareButtons";
@@ -35,6 +36,29 @@ interface RankHistoryEntry {
   rank_date: string;
   rank: number;
   rank_change: number;
+}
+
+interface SocialReaction {
+  id: string;
+  tweet_url: string;
+}
+
+async function getSocialReactions(slug: string): Promise<SocialReaction[]> {
+  const supabase = createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("social_reactions")
+    .select("id, tweet_url")
+    .eq("slug", slug)
+    .eq("content_type", "movie")
+    .order("added_at", { ascending: true })
+    .limit(10);
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data;
 }
 
 async function getMovie(slug: string): Promise<BoxOfficeDetail | null> {
@@ -140,6 +164,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   }
 
   const history = await getMovieHistory(slug);
+  const reactions = await getSocialReactions(slug);
   const title = movie.en_title || movie.movie_name;
   const showSubtitle = movie.en_title && movie.en_title !== movie.movie_name;
 
@@ -278,6 +303,22 @@ export default async function MoviePage({ params }: MoviePageProps) {
           posterUrl={movie.poster_url ?? undefined}
         />
       </div>
+
+      {reactions.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-lg font-bold text-zinc-900">Fan Reactions</h2>
+          <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
+            {reactions.map((reaction) => (
+              <div key={reaction.id} className="w-[300px] shrink-0">
+                <blockquote className="twitter-tweet">
+                  <a href={reaction.tweet_url}></a>
+                </blockquote>
+              </div>
+            ))}
+          </div>
+          <Script src="https://platform.twitter.com/widgets.js" strategy="lazyOnload" />
+        </section>
+      )}
 
       {movie.trailer_key && (
         <section className="mt-10">
