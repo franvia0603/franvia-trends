@@ -77,7 +77,7 @@ export default function SiteHeader() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-900">
+    <header className="sticky top-7 z-50 border-b border-zinc-800 bg-zinc-900">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
         <a
           href="https://trend.franvia.com"

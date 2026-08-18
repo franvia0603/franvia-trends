@@ -263,8 +263,8 @@ export default async function Home() {
     return (
       <>
         <JsonLd />
-        <SiteHeader />
         <LiveClock />
+        <SiteHeader />
         <TopTicker movies={tickerMovies} dramas={tickerDramas} />
         <main className="flex flex-col">
           <div className="mx-auto w-full max-w-3xl px-6 pt-6">
@@ -298,8 +298,8 @@ export default async function Home() {
   return (
     <>
       <JsonLd />
-      <SiteHeader />
       <LiveClock />
+      <SiteHeader />
       <TopTicker movies={tickerMovies} dramas={tickerDramas} />
       <main className="flex flex-col">
         <div className="mx-auto w-full max-w-3xl px-6 pt-6">
